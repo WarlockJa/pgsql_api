@@ -6,11 +6,14 @@ interface ITodoResult {
 }
 
 const getTodos = (req, res: Response<{}, {}>) => {
-    pool.query('SELECT * FROM todos')
-    .then((result: ITodoResult) => {
-        res.status(200).json(result.rows)
+    pool.query('SELECT * FROM todos', (err: Error, result: ITodoResult) => {
+        if(err) {
+            return res.status(500).json({ message: `Error executing query ${err.stack}` });
+        }
+        return res.status(200).json(result.rows);
     })
-    .catch((error: Error) => console.error(error))
+    // .then((result: ITodoResult) => res.status(200).json(result.rows))
+    // .catch((error: Error) => console.error(error))
 }
 
 interface IAddTodoRequestBody {
@@ -56,11 +59,16 @@ const addTodo = (req: Request<{}, {}, IAddTodoRequestBody>, res: Response<{}, {}
     
     // adding new todo to the DB
     // INSERT INTO table_name (field1, field2 ...) VALUES ($1, $2 ...) RETURNING *
-    pool.query(`INSERT INTO todos (${queryStringFields}) VALUES (${queryStringIndexes}) RETURNING *`, queryArray)
-    .then((result: ITodoResult) => {
-        res.status(201).send({ message: `Added todo with ID: ${result.rows[0].id}` })
+    pool.query(`INSERT INTO todos (${queryStringFields}) VALUES (${queryStringIndexes}) RETURNING *`, queryArray, (err: Error, result: ITodoResult) => {
+        if(err) {
+            return res.status(500).json({ message: `Error executing query ${err.stack}` }); 
+        }
+        return res.status(201).send({ message: `Added todo with ID: ${result.rows[0].id}` })
     })
-    .catch((error: Error) => console.error(error));
+    // .then((result: ITodoResult) => {
+    //     res.status(201).send({ message: `Added todo with ID: ${result.rows[0].id}` })
+    // })
+    // .catch((error: Error) => console.error(error));
 }
 
 interface IUpdateTodoRequestBody {
@@ -111,9 +119,14 @@ const updateTodo = (req: Request<{}, {}, IUpdateTodoRequestBody>, res: Response<
 
     // updating todo
     // UPDATE table_name SET field1 = $1, field2 = $2 ... WHERE id = $id_index
-    pool.query(`UPDATE todos SET ${queryString} WHERE id = $${idIndex}`, queryArray)
-    .then(res.status(200).send({ message: `Modified todo with ID: ${id}` }))
-    .catch((error: Error) => console.error(error));
+    pool.query(`UPDATE todos SET ${queryString} WHERE id = $${idIndex}`, queryArray, (err: Error) => {
+        if(err) {
+            return res.status(500).json({ message: `Error executing query ${err.stack}` }); 
+        }
+        return res.status(200).send({ message: `Modified todo with ID: ${id}` })
+    })
+    // .then(res.status(200).send({ message: `Modified todo with ID: ${id}` }))
+    // .catch((error: Error) => console.error(error));
 }
 
 interface IDeleteTodorequestBody {
@@ -122,9 +135,14 @@ interface IDeleteTodorequestBody {
 
 const deleteTodo = (req: Request<{}, {}, IDeleteTodorequestBody>, res: Response<{}, {}>) => {
     const { id } = req.body;
-    pool.query('DELETE FROM todos WHERE id = $1', [id])
-        .then(response => response.rowCount > 0 ? res.status(200).send({ message: `Deleted todo with ID: ${id}` }) : res.status(404).send({ message: `Not found todo entry with ID: ${id}` }))
-        .catch((error: Error) => console.error(error));
+    pool.query('DELETE FROM todos WHERE id = $1', [id], (err: Error, result: { rowCount: number; }) => {
+        if(err) {
+            return res.status(500).json({ message: `Error executing query ${err.stack}` }); 
+        }
+        return result.rowCount > 0 ? res.status(200).send({ message: `Deleted todo with ID: ${id}` }) : res.status(404).send({ message: `Not found todo entry with ID: ${id}` })
+    })
+    // .then(response => response.rowCount > 0 ? res.status(200).send({ message: `Deleted todo with ID: ${id}` }) : res.status(404).send({ message: `Not found todo entry with ID: ${id}` }))
+    // .catch((error: Error) => console.error(error));
 }
 
 export default { getTodos, addTodo, updateTodo, deleteTodo };
