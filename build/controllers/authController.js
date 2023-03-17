@@ -34,19 +34,19 @@ const authUser = async (req, res) => {
         //     console.log(result.rows);
         //     return res.sendStatus(200);
         // });
-        const result = await pool.query('SELECT * FROM users WHERE email=$1', [email]);
+        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
         if (result.rowCount === 0)
             return res.status(401).json({ message: 'User not found' });
         const foundUser = result.rows[0];
         const match = await bcrypt.compare(password, foundUser.password);
         if (match) {
             const accessToken = jwt.sign({ "email": foundUser.email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '600s' });
-            const refreshToken = jwt.sign({ "email": foundUser.email }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '1d' });
+            const refreshToken = jwt.sign({ "email": foundUser.email }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '30d' });
             // saving refresh token in DB
             foundUser.refreshtoken = refreshToken;
             await pool.query('UPDATE users SET refreshtoken = $1 WHERE email = $2', [refreshToken, email]);
             // refresh token cookie send as httpOnly so it cannot be accessed by JS. Sent with every request
-            res.cookie('dp', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 }); //Path: '/refresh', sameSite: 'None', secure: true, 
+            res.cookie('dailyplanner', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 }); //Path: '/refresh', sameSite: 'None', secure: true, 
             // keep only in memory
             return res.status(200).json({ accessToken, idToken: {
                     name: foundUser.name,
