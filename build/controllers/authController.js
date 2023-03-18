@@ -2,7 +2,7 @@ import pool from '../db/DBConnect.js';
 import { OAuth2Client } from "google-auth-library";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-async function verify({ clientId, credential }) {
+async function verify({ access_token, clientId, credential }) {
     const client = new OAuth2Client(clientId);
     try {
         // Call the verifyIdToken to varify and decode it
@@ -26,7 +26,7 @@ const authUser = async (req, res) => {
         const verifiedUserData = await verify({ clientId, credential });
         return res.status(200).json({ content: verifiedUserData });
     }
-    // authetication
+    // authorization
     if (email && password) {
         // await pool.query('SELECT * FROM users WHERE email=$1', [email], (err, result) => {
         //     if(err) return res.status(500).json({ message: 'Cannot access DB' });
@@ -47,12 +47,13 @@ const authUser = async (req, res) => {
             await pool.query('UPDATE users SET refreshtoken = $1 WHERE email = $2', [refreshToken, email]);
             // refresh token cookie send as httpOnly so it cannot be accessed by JS. Sent with every request
             res.cookie('dailyplanner', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 }); //Path: '/refresh', sameSite: 'None', secure: true, 
-            // keep only in memory
+            // sending access token and id token on authorization success
+            // WARNING: keep access token in memory only
             return res.status(200).json({ accessToken, idToken: {
                     name: foundUser.name,
                     surname: foundUser.surname,
                     picture: foundUser.picture,
-                    email: foundUser.email,
+                    // email: foundUser.email,
                     email_confirmed: foundUser.email_confirmed,
                     locale: foundUser.locale
                 }

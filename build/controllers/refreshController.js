@@ -21,7 +21,7 @@ const refreshToken = async (req, res) => {
         await pool.query('UPDATE users SET refreshtoken = $1 WHERE email = $2', [refreshToken, foundUser.email]);
         // refresh token cookie send as httpOnly so it cannot be accessed by JS. Sent with every request
         res.cookie('dailyplanner', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 }); //Path: '/refresh', sameSite: 'None', secure: true, 
-        // keep only in memory
+        // sending renewed access token and a new cookie with refresh token
         return res.status(200).json({ accessToken });
     });
 };
