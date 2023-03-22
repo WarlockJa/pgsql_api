@@ -5,36 +5,34 @@ const registerUser = async (req, res) => {
     const { email, name, password } = req.body;
     if (!email || !name || !password)
         return res.sendStatus(400);
-    // check if user already exist
-    const duplicate = pool.execute('SELECT email FROM users WHERE email=?', [email], async (err, rows, fields) => {
-        if (err) {
-            return res.status(500).json({ message: `Error executing query ${err.stack}` });
-        }
-        if (Array.isArray(rows) && rows.length > 0)
+    // check if user already exists
+    try {
+        const result = await pool.execute('SELECT email FROM users WHERE email=?', [email]);
+        if (Array.isArray(result[0]) && result[0].length > 0)
             return res.sendStatus(409);
-        // adding new user
-        try {
-            const hashedPassword = await bcrypt.hash(password, 10);
-            pool.execute('INSERT INTO users (email, name, password, email_confirmed) VALUES(?, ?, ?, ?)', [email, name, hashedPassword, false], (err) => {
-                if (err) {
-                    return res.status(500).json({ message: `Error executing query ${err.stack}` });
-                }
-                return res.status(201).json({ message: `Added user: ${name}` });
-            });
-        }
-        catch (error) {
-            return res.sendStatus(500).json({ message: `There was an error: ${error.message}` });
-        }
-    });
+    }
+    catch (error) {
+        return res.status(500).json({ message: `Error executing query ${error.stack}` });
+    }
+    // adding new user
+    try {
+        const hashedPassword = await bcrypt.hash(password, 10);
+        await pool.execute('INSERT INTO users (email, name, password, email_confirmed) VALUES(?, ?, ?, ?)', [email, name, hashedPassword, false]);
+        return res.status(201).json({ message: `Added user: ${name}` });
+    }
+    catch (error) {
+        return res.sendStatus(500).json({ message: `There was an error: ${error.message}` });
+    }
 };
 // TODO: TESTING ONLY! DELETE AFTER
-const getUsers = (req, res) => {
-    pool.execute('SELECT * FROM users', (err, result) => {
-        if (err) {
-            return res.status(500).json({ message: `Error executing query ${err.stack}` });
-        }
-        return res.status(200).json(result);
-    });
+const getUsers = async (req, res) => {
+    try {
+        const result = await pool.execute('SELECT * FROM users');
+        return res.status(200).json(result[0]);
+    }
+    catch (error) {
+        return res.status(500).json({ message: `Error executing query ${error.stack}` });
+    }
 };
 export default { registerUser, getUsers };
 //# sourceMappingURL=registerController.js.map

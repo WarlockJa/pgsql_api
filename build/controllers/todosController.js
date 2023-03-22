@@ -1,16 +1,17 @@
 import { pool } from '../db/DBConnect.js';
 import { createBinaryUUID, fromBinaryUUID, toBinaryUUID } from "binary-uuid";
-const getTodos = (req, res) => {
-    pool.execute('SELECT * FROM todos', (err, result) => {
-        if (err) {
-            return res.status(500).json({ message: `Error executing query ${err.stack}` });
-        }
+const getTodos = async (req, res) => {
+    try {
+        const result = await pool.execute('SELECT * FROM todos');
         // converting binary ID from MySQL into readable UUID
-        const resultWithIDasUUID = Array.isArray(result) ? result.map((todo) => ({ ...todo, id: fromBinaryUUID(todo.id) })) : result;
+        const resultWithIDasUUID = Array.isArray(result[0]) ? result[0].map((todo) => ({ ...todo, id: fromBinaryUUID(todo.id) })) : result;
         return res.status(200).json(resultWithIDasUUID);
-    });
+    }
+    catch (error) {
+        return res.status(500).json({ message: `Error executing query ${error.stack}` });
+    }
 };
-const addTodo = (req, res) => {
+const addTodo = async (req, res) => {
     const { useremail, title, description, date_due, reminder } = req.body;
     // data validation
     if (useremail === undefined || title === undefined)
@@ -28,12 +29,14 @@ const addTodo = (req, res) => {
         date_due ? date_due : null
     ];
     // writing to DB
-    // INSERT INTO table_name (field1, field2 ...) VALUES ($1, $2 ...)
-    pool.execute('INSERT INTO todos (id, useremail, title, description, reminder, date_due) VALUES(?,?,?,?,?,?)', insertMySQLdependencyArray, (err, result) => {
-        if (err)
-            return res.status(500).json({ message: `Error executing query ${err.stack}` });
+    try {
+        await pool.execute('INSERT INTO todos (id, useremail, title, description, reminder, date_due) VALUES(?,?,?,?,?,?)', insertMySQLdependencyArray);
         return res.status(201).send({ message: `Added todo with ID ${todoIDtoBIN.uuid}` });
-    });
+    }
+    catch (error) {
+        return res.status(500).json({ message: `Error executing query ${error.stack}` });
+    }
+    // INSERT INTO table_name (field1, field2 ...) VALUES ($1, $2 ...)
     // Postgres syntax
     // // forming SQL request from valid fields
     // let queryStringFields = '';
@@ -52,7 +55,7 @@ const addTodo = (req, res) => {
     //     return res.status(201).send({ message: `Added todo with ID: ${result.rows[0].id}` })
     // })
 };
-const updateTodo = (req, res) => {
+const updateTodo = async (req, res) => {
     const { id, useremail, title, completed, description, date_due, reminder } = req.body;
     if (!id)
         return res.status(400).send({ message: 'Todo ID required' });
@@ -83,12 +86,14 @@ const updateTodo = (req, res) => {
         return item[1];
     });
     // writing to DB
-    // UPDATE table_name SET field1 = $1, field2 = $2 ... WHERE id = $id_index
-    pool.execute(`UPDATE todos SET ${queryString} WHERE id=?`, queryArray, (err, result) => {
-        if (err)
-            return res.status(500).json({ message: `Error executing query ${err.stack}` });
+    try {
+        await pool.execute(`UPDATE todos SET ${queryString} WHERE id=?`, queryArray);
         return res.status(201).send({ message: `Updated todo with ID ${id}` });
-    });
+    }
+    catch (error) {
+        return res.status(500).json({ message: `Error executing query ${error.stack}` });
+    }
+    // UPDATE table_name SET field1 = ?, field2 = ? ... WHERE id = ?
     // Postgres logic
     // let validFields = {
     //     id,
@@ -122,17 +127,18 @@ const updateTodo = (req, res) => {
     //     return res.status(200).send({ message: `Modified todo with ID: ${id}` })
     // })
 };
-const deleteTodo = (req, res) => {
+const deleteTodo = async (req, res) => {
     const { id } = req.body;
     if (!id)
         return res.status(400).json({ message: "ID required" });
     const binaryUUID = toBinaryUUID(id);
-    pool.execute('DELETE FROM todos WHERE id = ?', [binaryUUID], (err, result) => {
-        if (err) {
-            return res.status(500).json({ message: `Error executing query ${err.stack}` });
-        }
-        return result.affectedRows > 0 ? res.status(200).send({ message: `Deleted todo with ID: ${id}` }) : res.status(404).send({ message: `Not found todo entry with ID: ${id}` });
-    });
+    try {
+        const result = await pool.execute('DELETE FROM todos WHERE id = ?', [binaryUUID]);
+        return result[0].affectedRows > 0 ? res.status(200).send({ message: `Deleted todo with ID: ${id}` }) : res.status(404).send({ message: `Not found todo entry with ID: ${id}` });
+    }
+    catch (error) {
+        res.status(500).json({ message: `Error executing query ${error.stack}` });
+    }
 };
 export default { getTodos, addTodo, updateTodo, deleteTodo };
 //# sourceMappingURL=todosController.js.map

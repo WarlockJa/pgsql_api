@@ -2,6 +2,7 @@ import { pool, IUser } from '../db/DBConnect.js';
 import { OAuth2Client } from "google-auth-library";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { OkPacket } from 'mysql2';
 
 interface IAuthGoogle {
     clientId: string;
@@ -18,7 +19,7 @@ interface IAuth {
     select_by?: "btn";
 }
 
-async function verify({ access_token, clientId, credential }: IAuthGoogle) {
+async function verifyGoogleCredentials({ access_token, clientId, credential }: IAuthGoogle) {
     const client = new OAuth2Client(clientId);
 
     try {
@@ -41,55 +42,50 @@ const authUser = async (req: { body: IAuth }, res) => {
 
     // verifying data sent through google button
     if(clientId && credential) {
-        const verifiedUserData = await verify({ clientId, credential });
+        const verifiedUserData = await verifyGoogleCredentials({ clientId, credential });
         return res.status(200).json({ content: verifiedUserData });
     }
 
     // authorization
     if(email && password) {
-        // await pool.query('SELECT * FROM users WHERE email=$1', [email], (err, result) => {
-        //     if(err) return res.status(500).json({ message: 'Cannot access DB' });
-        //     if(result.rowCount === 0) return res.status(401).json({ message: 'User not found' });
-        //     console.log(result.rows);
-        //     return res.sendStatus(200);
-        // });
-        const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]) as unknown as { rows: IUser[], rowCount: number; };
-        if(result.rowCount === 0) return res.status(401).json({ message: 'User not found' });
-        const foundUser = result.rows[0];
+        try {
+            const result = await pool.execute('SELECT * FROM users WHERE email = ?', [email]);
+            if(Array.isArray(result[0]) && result[0].length === 0) return res.status(401).json({ message: 'User not found' });
+            const foundUser = result[0][0];// as unknown as IUser;
+            
+            const match = await bcrypt.compare(password, foundUser.password);
+            if(match) {
+                const accessToken = jwt.sign(
+                    { "email": foundUser.email },
+                    process.env.ACCESS_TOKEN_SECRET,
+                    { expiresIn: '600s' }
+                );
+                const refreshToken = jwt.sign(
+                    { "email": foundUser.email },
+                    process.env.REFRESH_TOKEN_SECRET,
+                    { expiresIn: '30d' }
+                );
+    
+                // saving refresh token in DB
+                await pool.execute('UPDATE users SET refreshtoken = ? WHERE email = ?', [refreshToken, email]);
+                // refresh token cookie send as httpOnly so it cannot be accessed by JS. Sent with every request
+                res.cookie('dailyplanner', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 }); //Path: '/refresh', sameSite: 'None', secure: true, 
 
-        const match = await bcrypt.compare(password, foundUser.password);
-        if(match) {
-            const accessToken = jwt.sign(
-                { "email": foundUser.email },
-                process.env.ACCESS_TOKEN_SECRET,
-                { expiresIn: '600s' }
-            );
-            const refreshToken = jwt.sign(
-                { "email": foundUser.email },
-                process.env.REFRESH_TOKEN_SECRET,
-                { expiresIn: '30d' }
-            );
-
-            // saving refresh token in DB
-            foundUser.refreshtoken = refreshToken;
-            await pool.query('UPDATE users SET refreshtoken = $1 WHERE email = $2', [refreshToken, email]);
-
-            // refresh token cookie send as httpOnly so it cannot be accessed by JS. Sent with every request
-            res.cookie('dailyplanner', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 }); //Path: '/refresh', sameSite: 'None', secure: true, 
-
-            // sending access token and id token on authorization success
-            // WARNING: keep access token in memory only
-            return res.status(200).json({ accessToken, idToken: {
-                    name: foundUser.name,
-                    surname: foundUser.surname,
-                    picture: foundUser.picture,
-                    // email: foundUser.email,
-                    email_confirmed: foundUser.email_confirmed,
-                    locale: foundUser.locale
-                }
-            });
+                // sending access token and id token on authorization success
+                // WARNING: keep access token in memory only
+                return res.status(200).json({ accessToken, idToken: {
+                        name: foundUser.name,
+                        surname: foundUser.surname,
+                        picture: foundUser.picture,
+                        // email: foundUser.email,
+                        email_confirmed: foundUser.email_confirmed,
+                        locale: foundUser.locale
+                    }
+                });
+            } else return res.status(401).json({ message: 'Password incorrect'});
+        } catch (error) {
+            return res.status(500).json({ message: `Cannot access DB ${error.stack}` });
         }
-        return res.status(401).json({ message: 'Password incorrect'});
     }
     return res.status(400).json({ message: 'insufficient data' });
 }

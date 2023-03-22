@@ -1,5 +1,6 @@
 import { pool, IUser } from '../db/DBConnect.js';
 import jwt from 'jsonwebtoken';
+import { OkPacket, RowDataPacket } from 'mysql2';
 
 const refreshToken = async (req, res) => {
     const cookies = req.cookies;
@@ -8,9 +9,9 @@ const refreshToken = async (req, res) => {
     const refreshToken = cookies.dailyplanner;
 
     // checking if refresh token exists in DB
-    const result = await pool.query('SELECT refreshtoken, email FROM users WHERE refreshtoken = $1', [refreshToken]) as unknown as { rows: IUser[], rowCount: number; };
-    if(result.rowCount === 0) return res.sendStatus(403);
-    const foundUser = result.rows[0];
+    const result = await pool.execute<OkPacket>('SELECT refreshtoken, email FROM users WHERE refreshtoken = ?', [refreshToken]); // as unknown as { rows: IUser[], rowCount: number; };
+    if(Array.isArray(result[0]) && result[0].length === 0) return res.sendStatus(403);
+    const foundUser = result[0][0];
 
     // verifying refresh token and reissuing both access and refresh tokens
     jwt.verify(cookies.dailyplanner, process.env.REFRESH_TOKEN_SECRET, async (err, result) => {
@@ -28,14 +29,13 @@ const refreshToken = async (req, res) => {
         );
 
         // saving refresh token in DB
-        foundUser.refreshtoken = refreshToken;
-        await pool.query('UPDATE users SET refreshtoken = $1 WHERE email = $2', [refreshToken, foundUser.email]);
+        await pool.query('UPDATE users SET refreshtoken = ? WHERE email = ?', [refreshToken, foundUser.email]);
 
         // refresh token cookie send as httpOnly so it cannot be accessed by JS. Sent with every request
         res.cookie('dailyplanner', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 }); //Path: '/refresh', sameSite: 'None', secure: true, 
         // sending renewed access token and a new cookie with refresh token
         return res.status(200).json({ accessToken });
-    })
+    });
 }
 
 export default { refreshToken }

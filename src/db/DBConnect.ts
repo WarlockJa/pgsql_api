@@ -1,7 +1,7 @@
 // import pg from 'pg';
 // const pool = new pg.Pool();
 import { config } from 'dotenv';
-import mysql from 'mysql2';
+import mysql from 'mysql2/promise';
 config();
 
 export const pool = mysql.createPool({
@@ -18,7 +18,7 @@ export const pool = mysql.createPool({
 });
 
 export interface IUser {
-  id: number;
+  id: string;
   clientId: string;
   name: string;
   surname: string;

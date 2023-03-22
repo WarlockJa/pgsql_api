@@ -26,7 +26,7 @@ app.get('/', (req, res) => { res.send("API is running"); });
 app.use('/register', registerRouter);
 app.use('/auth', authRouter);
 app.use('/refresh', refreshRoute);
-app.use('/todos', todosRouter);
 app.use(verifyJWT);
+app.use('/todos', todosRouter);
 app.listen(PORT, () => console.log("Server is running on port ", PORT));
 //# sourceMappingURL=server.js.map
