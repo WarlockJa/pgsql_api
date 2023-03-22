@@ -1,31 +1,40 @@
-import pool from '../db/DBConnect.js';
+import { pool } from '../db/DBConnect.js';
 import bcrypt from 'bcrypt';
 const registerUser = async (req, res) => {
+    // TODO data validation against DB types
     const { email, name, password } = req.body;
     if (!email || !name || !password)
         return res.sendStatus(400);
-    const duplicate = await pool.query('SELECT email FROM users WHERE email=$1', [email], async (err, result) => {
+    // check if user already exist
+    const duplicate = pool.execute('SELECT email FROM users WHERE email=?', [email], async (err, rows, fields) => {
         if (err) {
             return res.status(500).json({ message: `Error executing query ${err.stack}` });
         }
-        if (result.rowCount > 0) {
-            res.sendStatus(409);
+        if (Array.isArray(rows) && rows.length > 0)
+            return res.sendStatus(409);
+        // adding new user
+        try {
+            const hashedPassword = await bcrypt.hash(password, 10);
+            pool.execute('INSERT INTO users (email, name, password, email_confirmed) VALUES(?, ?, ?, ?)', [email, name, hashedPassword, false], (err) => {
+                if (err) {
+                    return res.status(500).json({ message: `Error executing query ${err.stack}` });
+                }
+                return res.status(201).json({ message: `Added user: ${name}` });
+            });
         }
-        else {
-            try {
-                const hashedPassword = await bcrypt.hash(password, 10);
-                await pool.query('INSERT INTO users (email, name, password, email_confirmed) VALUES($1, $2, $3, $4) RETURNING *', [email, name, hashedPassword, false], (err, result) => {
-                    if (err) {
-                        return res.status(500).json({ message: `Error executing query ${err.stack}` });
-                    }
-                    return res.status(201).json({ message: `Added user: ${result.rows[0].name}` });
-                });
-            }
-            catch (error) {
-                return res.sendStatus(500).json({ message: `There was an error: ${error.message}` });
-            }
+        catch (error) {
+            return res.sendStatus(500).json({ message: `There was an error: ${error.message}` });
         }
     });
 };
-export default { registerUser };
+// TODO: TESTING ONLY! DELETE AFTER
+const getUsers = (req, res) => {
+    pool.execute('SELECT * FROM users', (err, result) => {
+        if (err) {
+            return res.status(500).json({ message: `Error executing query ${err.stack}` });
+        }
+        return res.status(200).json(result);
+    });
+};
+export default { registerUser, getUsers };
 //# sourceMappingURL=registerController.js.map

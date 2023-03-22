@@ -1,4 +1,4 @@
-import pool, { IUser } from '../db/DBConnect.js';
+import { pool, IUser } from '../db/DBConnect.js';
 import jwt from 'jsonwebtoken';
 
 const refreshToken = async (req, res) => {

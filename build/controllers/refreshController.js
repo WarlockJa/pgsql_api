@@ -1,4 +1,4 @@
-import pool from '../db/DBConnect.js';
+import { pool } from '../db/DBConnect.js';
 import jwt from 'jsonwebtoken';
 const refreshToken = async (req, res) => {
     const cookies = req.cookies;
