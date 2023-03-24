@@ -6,7 +6,7 @@ const refreshToken = async (req, res) => {
         return res.status(401);
     const refreshToken = cookies.dailyplanner;
     // checking if refresh token exists in DB
-    const result = await pool.execute('SELECT refreshtoken, email FROM users WHERE refreshtoken = ?', [refreshToken]); // as unknown as { rows: IUser[], rowCount: number; };
+    const result = await pool.execute('SELECT refreshtoken, email FROM users WHERE refreshtoken = ?', [refreshToken]);
     if (Array.isArray(result[0]) && result[0].length === 0)
         return res.sendStatus(403);
     const foundUser = result[0][0];
