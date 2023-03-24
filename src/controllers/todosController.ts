@@ -76,7 +76,7 @@ const addTodo = async (req, res) => {
 
 interface IUpdateTodoRequestBody {
     id: string;                 // todo id in the DB
-    useremail?: string;            // user id of the todo
+    useremail?: string;         // user id of the todo
     title?: string;             // todo title
     completed?: boolean;        // completion flag
     description?: string;       // description of the todo

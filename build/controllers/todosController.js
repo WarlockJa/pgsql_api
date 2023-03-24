@@ -64,6 +64,8 @@ const updateTodo = async (req, res) => {
     const date_duePlaceholder = reminder === true
         ? date_due ? date_due : undefined
         : undefined;
+
+    console.log(date_duePlaceholder)
     // removing undefined fields from processing
     let validFields = {
         useremail,
