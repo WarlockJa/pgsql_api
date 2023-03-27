@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 const refreshToken = async (req, res) => {
     const cookies = req.cookies;
     if (!cookies.dailyplanner)
-        return res.status(401);
+        return res.sendStatus(401);
     const refreshToken = cookies.dailyplanner;
     // checking if refresh token exists in DB
     const result = await pool.execute('SELECT refreshtoken, email FROM users WHERE refreshtoken = ?', [refreshToken]);
@@ -19,7 +19,7 @@ const refreshToken = async (req, res) => {
         // saving refresh token in DB
         await pool.query('UPDATE users SET refreshtoken = ? WHERE email = ?', [refreshToken, foundUser.email]);
         // refresh token cookie send as httpOnly so it cannot be accessed by JS. Sent with every request
-        res.cookie('dailyplanner', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 }); //Path: '/refresh', sameSite: 'None', secure: true, 
+        res.cookie('dailyplanner', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 30 * 24 * 60 * 60 * 1000 }); //Path: '/refresh', sameSite: 'None', secure: true, 
         // sending renewed access token and a new cookie with refresh token
         return res.status(200).json({ accessToken });
     });

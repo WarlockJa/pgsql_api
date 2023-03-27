@@ -61,10 +61,9 @@ const updateTodo = async (req, res) => {
         return res.status(400).send({ message: 'Todo ID required' });
     // validating data, removing undefined optional fields from further processing
     // invalidating reminder and reminder_interval if no date_due is set
-    const date_duePlaceholder = reminder
+    const date_duePlaceholder = reminder === true
         ? date_due ? date_due : undefined
         : undefined;
-
     // removing undefined fields from processing
     let validFields = {
         useremail,
