@@ -4,6 +4,7 @@ import authController from '../controllers/authController.js';
 
 authRouter.route('/')
     .get(authController.reauthUser)
+    .put(authController.logoutUser)
     .post(authController.authUser)
 
 export default authRouter;

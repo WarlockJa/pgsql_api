@@ -77,7 +77,7 @@ const authUser = async (req: { body: IAuth }, res) => {
                         name: foundUser.name,
                         surname: foundUser.surname,
                         picture: foundUser.picture,
-                        // email: foundUser.email,
+                        email: foundUser.email,
                         email_confirmed: foundUser.email_confirmed,
                         locale: foundUser.locale
                     }
@@ -134,4 +134,18 @@ const reauthUser = async (req, res) => {
     });
 }
 
-export default { authUser, reauthUser }
+// removing refreshToken from the DB on user logout
+const logoutUser = async(req, res) => {
+    const cookies = req.cookies;
+    if(!cookies.dailyplanner) return res.sendStatus(204);
+
+    const refreshToken = cookies.dailyplanner;
+
+    // checking if refresh token exists in DB and removing it
+    const result = await pool.execute<OkPacket>('UPDATE users SET refreshtoken = null WHERE refreshtoken = ?', [refreshToken]);
+    // deleting client-side cookie
+    res.cookie('dailyplanner', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 0 }); 
+    return result[0].affectedRows === 0 ? res.sendStatus(204) : res.status(200).json({ message: 'Logout successful' });
+}
+
+export default { authUser, reauthUser, logoutUser }
