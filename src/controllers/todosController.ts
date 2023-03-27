@@ -91,7 +91,7 @@ const updateTodo = async (req: { body: IUpdateTodoRequestBody }, res) => {
 
     // validating data, removing undefined optional fields from further processing
     // invalidating reminder and reminder_interval if no date_due is set
-    const date_duePlaceholder = reminder === true
+    const date_duePlaceholder = reminder
         ? date_due ? date_due : undefined
         : undefined
 
