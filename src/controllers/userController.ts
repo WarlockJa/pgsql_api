@@ -2,10 +2,10 @@ import { OkPacket } from 'mysql2';
 import { pool } from '../db/DBConnect.js'
 
 const deleteUser = async (req, res) => {
-    // TODO data validation against DB types
-
     const { email } = req.body;
     if(!email) return res.status(400).json({ message: 'email required' });
+    const userEmail = req.userEmail;
+    if(email !== userEmail) return res.sendStatus(403);
 
     // deleting user
     try {
