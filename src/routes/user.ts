@@ -1,7 +1,8 @@
 import express from "express";
 const userRouter = express.Router();
 import userController from '../controllers/userController.js';
+
 userRouter.route('/')
     .delete(userController.deleteUser);
+
 export default userRouter;
-//# sourceMappingURL=user.js.map
