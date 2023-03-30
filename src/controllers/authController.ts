@@ -1,4 +1,4 @@
-import { pool, IUser } from '../db/DBConnect.js';
+import { pool } from '../db/DBConnect.js';
 import { OAuth2Client } from "google-auth-library";
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
