@@ -7,8 +7,10 @@ interface ITodoResult {
 }
 
 const getTodos = async (req, res) => {
+    // getting user email from decoded access token
+    const userEmail = req.userEmail;
     try {
-        const result = await pool.execute('SELECT * FROM todos');
+        const result = await pool.execute('SELECT * FROM todos WHERE useremail = ?', [userEmail]);
         // converting binary ID from MySQL into readable UUID
         const resultWithIDasUUID = Array.isArray(result[0]) ? result[0].map((todo) => ({ ...todo, id: fromBinaryUUID(todo.id) })) : result;
         return res.status(200).json(resultWithIDasUUID);
