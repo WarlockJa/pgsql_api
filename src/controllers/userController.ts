@@ -10,6 +10,7 @@ const confirmEmail = async (req, res) => {
         subject: sendMailOptions.subject,
         html: sendMailOptions.html
     });
+    
     return res.status(200).json({ message: result });
 }
 
