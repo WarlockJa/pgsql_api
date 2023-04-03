@@ -20,15 +20,22 @@ const sendEmail = async ({ subject, html, to, replyTo }) => {
         html: html
     };
     //Send Email
-    const result = await transport.sendMail(options, function (err, info) {
-        if (err) {
-            return (err);
-        }
-        else {
-            return (info);
-        }
-    });
-    return result;
+    // const result = 
+    // transport.sendMail(options, function(err, info) {
+    //     if(err) {
+    //         console.log(err);
+    //         return(err)
+    //     } else {
+    //         console.log(info);
+    //         return(info)
+    //     }
+    // });
+    try {
+        return await transport.sendMail(options);
+    }
+    catch (error) {
+        return error;
+    }
 };
 export default sendEmail;
 //# sourceMappingURL=sendEmail.js.map

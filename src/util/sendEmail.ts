@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-export interface INodemailerEmailOptions {
+interface INodemailerEmailOptions {
     to: string;
     replyTo?: string;
     subject?: string;
@@ -9,6 +9,11 @@ export interface INodemailerEmailOptions {
 
 interface NodemailerTransportOptions extends INodemailerEmailOptions {
     from: string;
+}
+
+interface NodemailerSentResponse {
+    accepted: string[];
+    rejected: string[];
 }
 
 interface ITransport {
@@ -22,7 +27,7 @@ interface ITransport {
     tls: {
         rejectUnauthorized: boolean;
     }
-    sendMail: (options: NodemailerTransportOptions, callback: (err: Error | null, info: object) => void) => void;
+    sendMail: (options: NodemailerTransportOptions) => NodemailerSentResponse;
 }
 
 const sendEmail = async ({ subject, html, to, replyTo }: INodemailerEmailOptions) => {
@@ -47,15 +52,11 @@ const sendEmail = async ({ subject, html, to, replyTo }: INodemailerEmailOptions
         html: html
     }
 
-    //Send Email
-    const result = await transport.sendMail(options, function(err, info) {
-        if(err) {
-            return (err);
-        } else {
-            return (info);
-        }
-    });
-    return result;
+    try {
+        return await transport.sendMail(options);
+    } catch (error) {
+        return error
+    }
 }
 
 export default sendEmail;

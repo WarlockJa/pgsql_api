@@ -1,6 +1,6 @@
 import express from 'express';
-const refreshRoute = express.Router();
+const refreshRouter = express.Router();
 import refreshController from '../controllers/refreshController.js';
-refreshRoute.get('/', refreshController.refreshToken);
-export default refreshRoute;
+refreshRouter.get('/', refreshController.refreshToken);
+export default refreshRouter;
 //# sourceMappingURL=refresh.js.map

@@ -3,7 +3,7 @@ const userRouter = express.Router();
 import userController from '../controllers/userController.js';
 
 userRouter.route('/')
-    .post(userController.confirmEmail)
+    .post(userController.confirmUser)
     .delete(userController.deleteUser);
 
 export default userRouter;
