@@ -27,8 +27,8 @@ const confirmUser = async (req, res) => {
     const htmlVerificationLink = `<a href='${process.env.BASE_URI}/verify/${userEmailFromAccessToken}/${emailConfirmationToken}' target='_blank'>Click to Verify</a>`;
 
     const result = await sendEmail({
-        // to: 'warlockja@gmail.com',
-        to: userEmailFromAccessToken,
+        to: 'warlockja@gmail.com',
+        // to: userEmailFromAccessToken,
         subject: 'Daily Planner Email verification',
         html: htmlVerificationLink
     });

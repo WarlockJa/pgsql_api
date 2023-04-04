@@ -2,7 +2,6 @@ import { pool } from '../db/DBConnect.js';
 import sendEmail from '../util/sendEmail.js';
 import crypto from 'crypto';
 const confirmUser = async (req, res) => {
-    const sendMailOptions = req.body;
     const userEmailFromAccessToken = req.userEmail;
     // checking if email already confirmed
     try {
@@ -27,8 +26,9 @@ const confirmUser = async (req, res) => {
     const htmlVerificationLink = `<a href='${process.env.BASE_URI}/verify/${userEmailFromAccessToken}/${emailConfirmationToken}' target='_blank'>Click to Verify</a>`;
     const result = await sendEmail({
         to: 'warlockja@gmail.com',
+        // to: userEmailFromAccessToken,
         subject: 'Daily Planner Email verification',
-        html: htmlVerificationLink //sendMailOptions.html
+        html: htmlVerificationLink
     });
     const message = result.accepted?.length === 1 ? 'An email sent to your account please verify' : 'There was an error sending email';
     return res.status(200).json({ message: message });

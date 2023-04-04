@@ -19,17 +19,6 @@ const sendEmail = async ({ subject, html, to, replyTo }) => {
         subject: subject,
         html: html
     };
-    //Send Email
-    // const result = 
-    // transport.sendMail(options, function(err, info) {
-    //     if(err) {
-    //         console.log(err);
-    //         return(err)
-    //     } else {
-    //         console.log(info);
-    //         return(info)
-    //     }
-    // });
     try {
         return await transport.sendMail(options);
     }
