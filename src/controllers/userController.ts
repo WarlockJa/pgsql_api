@@ -23,8 +23,12 @@ const confirmUser = async (req, res) => {
     }
 
     // creating html verification link to send to user
-    // TODO: Make a better html
-    const htmlVerificationLink = `<a href='${process.env.BASE_URI}/verify/${userEmailFromAccessToken}/${emailConfirmationToken}' target='_blank'>Click to Verify</a>`;
+    const htmlVerificationLink =
+    `<body style="padding: 3em; border-radius: 8px; background: linear-gradient(35deg, lightblue, rgb(232, 255, 254)); color: #131313; font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;">
+        <h1>Daily Planner</h1>
+        <p style="max-width: 700px; font-size: 1.5rem;">You received this e-mail as a part of verification process for <span style="color: #252525; font-weight: bold;">Daily Planner</span> website. Follow the link to confirm your e-mail address and unlock additional features, such as reminder option for your tasks!</p>
+        <a style="color: #2626B6; font-size: 1.5rem;" onmouseleave="this.style.color='#2626B6'" onmouseover="this.style.color='#7626B6'" href='${process.env.BASE_URI}/verify/${userEmailFromAccessToken}/${emailConfirmationToken}' target='_blank'>Click to Verify</a>
+    </body>`;
 
     const result = await sendEmail({
         to: 'warlockja@gmail.com',
