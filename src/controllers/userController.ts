@@ -3,6 +3,8 @@ import { pool } from '../db/DBConnect.js';
 import sendEmail from '../util/sendEmail.js';
 import crypto from 'crypto';
 
+
+// POST request. User email confirmation
 const confirmUser = async (req, res) => {
     const userEmailFromAccessToken = req.userEmail;
     // checking if email already confirmed
@@ -22,7 +24,7 @@ const confirmUser = async (req, res) => {
         return res.status(500).json({ message: 'Failed to replace verification data' });
     }
 
-    // creating html verification link to send to user
+    // creating html verification link to send user as email body
     const htmlVerificationLink =
     `<body style="padding: 3em; border-radius: 8px; background: linear-gradient(35deg, lightblue, rgb(232, 255, 254)); color: #131313; font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;">
         <h1>Daily Planner</h1>
@@ -40,6 +42,12 @@ const confirmUser = async (req, res) => {
     return res.status(200).json({ message: message });
 }
 
+// PUT request. Updates user data in the DB
+const updateUser = (req, res) => {
+    
+}
+
+// DELETE request. Deletes user and associated data from BD
 const deleteUser = async (req, res) => {
     const { email } = req.body;
     if(!email) return res.status(400).json({ message: 'email required' });
@@ -60,4 +68,4 @@ const deleteUser = async (req, res) => {
     }
 }
 
-export default { deleteUser, confirmUser }
+export default { deleteUser, confirmUser, updateUser }

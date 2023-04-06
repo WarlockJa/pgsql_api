@@ -1,6 +1,7 @@
 import { pool } from '../db/DBConnect.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import Joi from 'joi';
 async function verifyGoogleCredentials({ access_token }) {
     // google api uri
     const GOOGLE_URI = 'https://www.googleapis.com/oauth2/v3/userinfo?access_token=';
@@ -14,10 +15,27 @@ async function verifyGoogleCredentials({ access_token }) {
         return error;
     }
 }
+// joi schema for google authentication request body
+const schema = Joi.object({
+    access_token: Joi.string()
+        .pattern(new RegExp(/^[a-zA-Z0-9\-_.]{20,250}$/))
+        .required(),
+    preferredtheme: Joi.string()
+        .valid('s', 'd', 'l')
+});
+const isValidPreferredTheme = (preferredtheme) => {
+    return (typeof preferredtheme === 'string' &&
+        preferredtheme !== null &&
+        preferredtheme === 's' || preferredtheme === 'd' || preferredtheme === 'l');
+};
+// POST request. Authentication via Google with following authorization/registration
 const authGoogleUser = async (req, res) => {
+    // validating request body
+    // const validationResult = await schema.validate(req.body);
+    // if(validationResult.error) return res.status(400).json(validationResult.error.details[0].message);
     const { access_token } = req.body;
-    if (!access_token)
-        return res.sendStatus(400);
+    // assigning default value to preferredtheme if not present in the request body
+    const preferredtheme = isValidPreferredTheme(req.body.preferredtheme) ? req.body.preferredtheme : 's';
     // verifying user and fetching user data from Google api
     const userGoogleData = await verifyGoogleCredentials({ access_token });
     const { sub, given_name, family_name, picture, email, email_verified, locale } = userGoogleData;
@@ -30,27 +48,43 @@ const authGoogleUser = async (req, res) => {
         // generating tokens
         const accessToken = jwt.sign({ "email": email }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '600s' });
         const refreshToken = jwt.sign({ "email": email }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '30d' });
+        let idToken;
         if (Array.isArray(result[0]) && result[0].length === 0) {
             // user not found. registration
             const hashedPassword = await bcrypt.hash(sub, 10); // dummy password, to prevent unauthorized access
-            await pool.execute('INSERT INTO users (email, email_confirmed, name, surname, locale, password, refreshtoken) VALUES(?, ?, ?, ?, ?, ?, ?)', [email, email_verified, given_name, family_name, locale, hashedPassword, refreshToken]);
-        }
-        else {
-            // user found, updating user data and refresh token
-            await pool.execute('UPDATE users SET email_confirmed = ?, name = ?, surname = ?, locale = ?, refreshtoken = ? WHERE email = ?', [email_verified, given_name, family_name, locale, refreshToken, email]);
-        }
-        // authorization
-        res.cookie('dailyplanner', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 });
-        // WARNING: keep access token in memory only
-        return res.status(200).json({ accessToken, idToken: {
+            await pool.execute('INSERT INTO users (email, email_confirmed, name, surname, locale, password, refreshtoken, preferredtheme, authislocal) VALUES(?, ?, ?, ?, ?, ?, ?, ?)', [email, email_verified, given_name, family_name, locale, hashedPassword, refreshToken, preferredtheme, false]);
+            // creating IdToken based on data fetched from Google
+            idToken = {
                 name: given_name,
                 surname: family_name,
                 picture: picture,
                 email: email,
-                email_confirmed: email_verified,
-                locale: locale
-            }
-        });
+                email_confirmed: email_verified ? 1 : 0,
+                locale: locale,
+                preferredtheme: preferredtheme,
+                authislocal: 1
+            };
+        }
+        else {
+            // user found, updating refresh token
+            await pool.execute('UPDATE users SET refreshtoken = ? WHERE email = ?', [refreshToken, email]);
+            // creating IdToken from DB data
+            const foundUser = result[0][0];
+            idToken = {
+                name: foundUser.name,
+                surname: foundUser.surname,
+                picture: foundUser.picture,
+                email: foundUser.email,
+                email_confirmed: foundUser.email_confirmed,
+                locale: foundUser.locale,
+                preferredtheme: foundUser.preferredtheme,
+                authislocal: foundUser.authislocal
+            };
+        }
+        // authorization
+        res.cookie('dailyplanner', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 24 * 60 * 60 * 1000 });
+        // WARNING: keep access token in memory only
+        return res.status(200).json({ accessToken, idToken });
     }
     catch (error) {
         return res.status(500).json({ message: `Cannot access DB ${error.stack}` });

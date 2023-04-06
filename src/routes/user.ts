@@ -4,6 +4,7 @@ import userController from '../controllers/userController.js';
 
 userRouter.route('/')
     .post(userController.confirmUser)
+    .put(userController.updateUser)
     .delete(userController.deleteUser);
 
 export default userRouter;

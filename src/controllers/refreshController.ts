@@ -2,6 +2,7 @@ import { pool } from '../db/DBConnect.js';
 import jwt from 'jsonwebtoken';
 import { OkPacket } from 'mysql2';
 
+// GET request. Renew refresh and access tokens
 const refreshToken = async (req, res) => {
     const cookies = req.cookies;
     if(!cookies.dailyplanner) return res.sendStatus(401);

@@ -1,10 +1,35 @@
 import { pool } from '../db/DBConnect.js';
 import bcrypt from 'bcrypt';
+import Joi from 'joi';
+const schema = Joi.object({
+    email: Joi.string()
+        .email()
+        .required(),
+    name: Joi.string()
+        .min(1)
+        .max(254)
+        .required(),
+    password: Joi.string()
+        .pattern(new RegExp(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{5,60}$/))
+        .required(),
+    preferredtheme: Joi.string().valid('s', 'd', 'l'),
+    locale: Joi.string().valid('en-US')
+});
+// POST request. Registering new user with email-password pair
 const registerUser = async (req, res) => {
     // TODO data validation against DB types
     const { email, name, password } = req.body;
     if (!email || !name || !password)
         return res.sendStatus(400);
+    // schema validation test
+    const validationResult = await schema.validate(req.body);
+    // Joi schema validation
+    if (validationResult.error)
+        return res.status(400).json(validationResult.error.details[0].message);
+    // assigning default value to preferredtheme field if not present in the body
+    const preferredtheme = req.body.preferredtheme ? req.body.preferredtheme : 's';
+    // assigning default value to locale field if not present in the body
+    const locale = req.body.locale ? req.body.locale : 'en-US';
     // check if user already exists
     try {
         const result = await pool.execute('SELECT email FROM users WHERE email=?', [email]);
@@ -17,7 +42,7 @@ const registerUser = async (req, res) => {
     // adding new user
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        await pool.execute('INSERT INTO users (email, name, password, email_confirmed) VALUES(?, ?, ?, ?)', [email, name, hashedPassword, false]);
+        await pool.execute('INSERT INTO users (email, name, password, email_confirmed, preferredtheme, locale) VALUES(?, ?, ?, ?, ?)', [email, name, hashedPassword, false, preferredtheme, locale]);
         return res.status(201).json({ message: `Added user: ${name}` });
     }
     catch (error) {

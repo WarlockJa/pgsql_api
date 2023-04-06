@@ -1,5 +1,6 @@
 import { pool } from '../db/DBConnect.js';
 import jwt from 'jsonwebtoken';
+// GET request. Renew refresh and access tokens
 const refreshToken = async (req, res) => {
     const cookies = req.cookies;
     if (!cookies.dailyplanner)
