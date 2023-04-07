@@ -17,7 +17,6 @@ const schema = Joi.object({
 });
 // POST request. Registering new user with email-password pair
 const registerUser = async (req, res) => {
-    // TODO data validation against DB types
     const { email, name, password } = req.body;
     if (!email || !name || !password)
         return res.sendStatus(400);
@@ -42,7 +41,7 @@ const registerUser = async (req, res) => {
     // adding new user
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        await pool.execute('INSERT INTO users (email, name, password, email_confirmed, preferredtheme, locale) VALUES(?, ?, ?, ?, ?)', [email, name, hashedPassword, false, preferredtheme, locale]);
+        await pool.execute('INSERT INTO users (email, name, password, email_confirmed, preferredtheme, locale) VALUES(?, ?, ?, ?, ?, ?)', [email, name, hashedPassword, 0, preferredtheme, locale]);
         return res.status(201).json({ message: `Added user: ${name}` });
     }
     catch (error) {

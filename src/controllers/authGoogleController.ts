@@ -63,7 +63,7 @@ const authGoogleUser = async (req, res) => {
 
     // verifying user and fetching user data from Google api
     const userGoogleData: AuthGoogleResponse = await verifyGoogleCredentials({ access_token });
-    const { sub, given_name, family_name, picture, email, email_verified, locale } = userGoogleData;
+    const { sub, given_name, name, family_name, picture, email, email_verified, locale } = userGoogleData;
 
     // if no user data sending error
     if(!email) return res.status(500).json({ message: userGoogleData });
@@ -84,23 +84,25 @@ const authGoogleUser = async (req, res) => {
             { expiresIn: '30d' }
         );
 
+        
         let idToken: IIdToken;
         if(Array.isArray(result[0]) && result[0].length === 0) {
             // user not found. registration
             const hashedPassword = await bcrypt.hash(sub, 10); // dummy password, to prevent unauthorized access
-            await pool.execute('INSERT INTO users (email, email_confirmed, name, surname, locale, password, refreshtoken, preferredtheme, authislocal) VALUES(?, ?, ?, ?, ?, ?, ?, ?)',[email, email_verified, given_name, family_name, locale, hashedPassword, refreshToken, preferredtheme, false]);
-
             // creating IdToken based on data fetched from Google
             idToken = {
-                name: given_name,
-                surname: family_name,
+                name: given_name ? given_name : name,
+                surname: family_name ? family_name : '',
                 picture: picture,
                 email: email,
                 email_confirmed: email_verified ? 1 : 0,
                 locale: locale,
                 preferredtheme: preferredtheme,
-                authislocal: 1
+                authislocal: 0
             };
+            // console.log(idToken)
+            await pool.execute('INSERT INTO users (email, email_confirmed, name, surname, locale, password, refreshtoken, preferredtheme, authislocal) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)',[email, email_verified, idToken.name, idToken.surname, locale, hashedPassword, refreshToken, preferredtheme, 0]);
+
         } else {
             // user found, updating refresh token
             await pool.execute('UPDATE users SET refreshtoken = ? WHERE email = ?', [refreshToken, email]);
