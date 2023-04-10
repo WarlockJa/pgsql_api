@@ -21,7 +21,7 @@ const verifyUser = async (req, res) => {
         if(verificationRequest.token !== confirmationToken) return res.status(401).json({ message: 'Incorrect verification data' });
         // checking that verification request is not outdated
         // compareTimestamps accepts MySQL timestamp string, MySQL Offset (Planetscale MySQL UTC-4), and max delta in seconds
-        if (!compareTimestamps({mySQLTimestamp: verificationRequest.ts, mySQLOffset: -4, maxDelta: 10 * 60 })) return res.status(400).json({ message: 'Verification link expired' });
+        if (!compareTimestamps({ mySQLTimestamp: verificationRequest.ts, mySQLOffset: -4, maxDelta: 10 * 60 })) return res.status(400).json({ message: 'Verification link expired' });
         
         // applying verified status and removing verification request data from the DB
         await pool.execute('DELETE FROM verify WHERE email = ?', [userEmail]);

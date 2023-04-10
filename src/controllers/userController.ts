@@ -1,10 +1,39 @@
 import { OkPacket } from 'mysql2';
-import { pool } from '../db/DBConnect.js';
+import { IUser, pool } from '../db/DBConnect.js';
 import sendEmail from '../util/sendEmail.js';
 import crypto from 'crypto';
+import bcrypt from 'bcrypt';
+import { IIdToken } from './authController.js';
+import Joi from 'joi';
 
+// get id token
+const getUser = async (req, res) => {
+    // getting email form access token
+    const userEmail = req.userEmail;
+    try {
+        // finding user data
+        const result = await pool.execute<OkPacket>('SELECT * FROM users WHERE email = ?', [userEmail]);
+        if(Array.isArray(result[0]) && result[0].length === 0) return res.status(404).json({ message: 'user not found' });
+        
+        // forming idToken and sending result
+        const foundUser = result[0][0];
+        const idToken: IIdToken = {
+            name: foundUser.name,
+            surname: foundUser.surname,
+            picture: foundUser.picture,
+            email: foundUser.email,
+            email_confirmed: foundUser.email_confirmed,
+            locale: foundUser.locale,
+            preferredtheme: foundUser.preferredtheme,
+            authislocal: foundUser.authislocal
+        };
+        return res.status(200).json({ idToken });
+    } catch (error) {
+        return res.status(500).json({ message: 'Failed to access DB' });
+    }
+}
 
-// POST request. User email confirmation
+// PUT request. User email confirmation
 const confirmUser = async (req, res) => {
     const userEmailFromAccessToken = req.userEmail;
     // checking if email already confirmed
@@ -42,9 +71,84 @@ const confirmUser = async (req, res) => {
     return res.status(200).json({ message: message });
 }
 
-// PUT request. Updates user data in the DB
-const updateUser = (req, res) => {
-    
+
+// Joi schema for updateUser
+const schemaUpdateUser = Joi.object ({
+    // user name
+    name: Joi.string()
+        .min(1)
+        .max(254),
+    // user surname
+    surname: Joi.string(),
+    // new password is checked for complexity rules
+    oldpassword: Joi.string(),
+    newpassword: Joi.string().pattern(new RegExp(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{5,60}$/)),
+    // preferred theme s - system, d - dark, l - light
+    preferredtheme: Joi.string().valid('s', 'd', 'l'),
+    locale: Joi.string().valid('en-US'),
+    picture: Joi.string()
+}).and('oldpassword', 'newpassword'); // checking that if oldpassword present, new password must be present and vice versa
+
+// POST request. Updates user data in the DB
+const updateUser = async (req, res) => {
+    // user email from access token
+    const userEmail = req.userEmail;
+    // Joi schema validation
+    const validationResult = await schemaUpdateUser.validate(req.body);
+    if(validationResult.error) return res.status(400).json(validationResult.error.details[0].message);
+
+    // reading user data from DB
+    let foundUser: IUser;
+    try {
+        const result = await pool.execute<OkPacket>('SELECT * FROM users WHERE email = ?', [userEmail]);
+        if(Array.isArray(result[0]) && result[0].length !== 0) {
+            foundUser = result[0][0];
+        } else {
+            return res.status(404).json({ message: 'User does not exist' });
+        }
+    } catch (error) {
+        return res.status(500).json({ message: `Error executing query ${error.stack}` });
+    }
+
+    // variable that is to be used in forming SQL request
+    let validFields = validationResult.value;
+    // processing password change attempt
+    if(validFields['newpassword']) {
+        // checking if attempting to change password for externally authenticated user (Google authentication)
+        if(foundUser.authislocal === 0) return res.status(401).json({ message: 'Not allowed to change password with external authentication' });
+        // checking if password is correct
+        const match = await bcrypt.compare(validFields['oldpassword'], foundUser.password);
+        if(!match) return res.status(401).json({ message: 'Old password is incorrect'});
+        // adding password with the value of encrypted newpassword in the validFields and removing fields oldpassword and newpassword
+        const hashedPassword = await bcrypt.hash(validFields['newpassword'], 10);
+        validFields.password = hashedPassword;
+        delete validFields['newpassword'];
+        delete validFields['oldpassword'];
+    }
+
+    // forming SQL request from valid fields
+    let queryString = ''; // 'field1 = ?, field2 = ?, ... , fieldN = ?'
+    const queryArray = Object.entries(validationResult.value).map((item) => {
+        queryString += queryString !== '' ? `, ${item[0]} = ?` : `${item[0]} = ?`;
+        return item[1];
+    });
+
+    // writing to DB
+    try {
+        await pool.execute(`UPDATE users SET ${queryString} WHERE email=?`, [...queryArray, userEmail]);
+        return res.status(200).send({ message: `Updated user with email ${userEmail}` });
+    } catch (error) {
+        return res.status(500).json({ message: `Error executing query ${error.stack}` });
+    }
+
+    // const idToken: IIdToken = {
+    //     name: foundUser.name,
+    //     surname: foundUser.surname,
+    //     picture: foundUser.picture,
+    //     email: foundUser.email,
+    //     locale: foundUser.locale,
+    //     preferredtheme: foundUser.preferredtheme,
+    // };
 }
 
 // DELETE request. Deletes user and associated data from BD
@@ -68,4 +172,4 @@ const deleteUser = async (req, res) => {
     }
 }
 
-export default { deleteUser, confirmUser, updateUser }
+export default { deleteUser, confirmUser, updateUser, getUser }

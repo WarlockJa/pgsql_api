@@ -18,8 +18,6 @@ export const pool = mysql.createPool({
 });
 
 export interface IUser {
-  id: string;
-  clientId: string;
   name: string;
   surname: string;
   picture: string;
@@ -28,6 +26,8 @@ export interface IUser {
   locale: string;
   refreshtoken: string;
   password: string;
+  preferredtheme: number;
+  authislocal: number;
 }
 
 // export default {

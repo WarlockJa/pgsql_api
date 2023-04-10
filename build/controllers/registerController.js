@@ -1,7 +1,7 @@
 import { pool } from '../db/DBConnect.js';
 import bcrypt from 'bcrypt';
 import Joi from 'joi';
-const schema = Joi.object({
+const schemaRegisterUser = Joi.object({
     email: Joi.string()
         .email()
         .required(),
@@ -17,18 +17,15 @@ const schema = Joi.object({
 });
 // POST request. Registering new user with email-password pair
 const registerUser = async (req, res) => {
-    const { email, name, password } = req.body;
-    if (!email || !name || !password)
-        return res.sendStatus(400);
-    // schema validation test
-    const validationResult = await schema.validate(req.body);
     // Joi schema validation
+    const validationResult = await schemaRegisterUser.validate(req.body);
     if (validationResult.error)
         return res.status(400).json(validationResult.error.details[0].message);
     // assigning default value to preferredtheme field if not present in the body
     const preferredtheme = req.body.preferredtheme ? req.body.preferredtheme : 's';
     // assigning default value to locale field if not present in the body
     const locale = req.body.locale ? req.body.locale : 'en-US';
+    const { email, name, password } = validationResult.value;
     // check if user already exists
     try {
         const result = await pool.execute('SELECT email FROM users WHERE email=?', [email]);
