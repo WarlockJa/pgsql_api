@@ -73,7 +73,8 @@ const schemaUpdateUser = Joi.object({
         .min(1)
         .max(254),
     // user surname
-    surname: Joi.string(),
+    surname: Joi.string().
+        min(0),
     // new password is checked for complexity rules
     oldpassword: Joi.string(),
     newpassword: Joi.string().pattern(new RegExp(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{5,60}$/)),
@@ -130,7 +131,7 @@ const updateUser = async (req, res) => {
     // writing to DB
     try {
         await pool.execute(`UPDATE users SET ${queryString} WHERE email=?`, [...queryArray, userEmail]);
-        return res.status(200).send({ message: `Updated user with email ${userEmail}` });
+        return res.status(200).send({ message: `Updated user with email ${userEmail}`, status: 200 });
     }
     catch (error) {
         return res.status(500).json({ message: `Error executing query ${error.stack}` });
@@ -168,5 +169,5 @@ const deleteUser = async (req, res) => {
         return res.sendStatus(500).json({ message: `There was an error: ${error.message}` });
     }
 };
-export default { deleteUser, confirmUser, updateUser, getUser };
+export default { deleteUser, confirmUser, updateUser, getUser, schemaUpdateUser };
 //# sourceMappingURL=userController.js.map
