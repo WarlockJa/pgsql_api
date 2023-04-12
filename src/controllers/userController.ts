@@ -6,32 +6,46 @@ import bcrypt from 'bcrypt';
 import { IIdToken } from './authController.js';
 import Joi from 'joi';
 
-// get id token
-const getUser = async (req, res) => {
-    // getting email form access token
+// GET userLogout
+const logoutUser = async(req, res) => {
     const userEmail = req.userEmail;
+    // checking if refresh token exists in DB and removing it
     try {
-        // finding user data
-        const result = await pool.execute<OkPacket>('SELECT * FROM users WHERE email = ?', [userEmail]);
-        if(Array.isArray(result[0]) && result[0].length === 0) return res.status(404).json({ message: 'user not found' });
-        
-        // forming idToken and sending result
-        const foundUser = result[0][0];
-        const idToken: IIdToken = {
-            name: foundUser.name,
-            surname: foundUser.surname,
-            picture: foundUser.picture,
-            email: foundUser.email,
-            email_confirmed: foundUser.email_confirmed,
-            locale: foundUser.locale,
-            preferredtheme: foundUser.preferredtheme,
-            authislocal: foundUser.authislocal
-        };
-        return res.status(200).json({ idToken });
+        const result = await pool.execute<OkPacket>('UPDATE users SET refreshtoken = null WHERE email = ?', [userEmail]);
+        // deleting client-side cookie
+        res.cookie('dailyplanner', '', { httpOnly: true, sameSite: 'None', secure: true, maxAge: 0 }); 
+        return result[0].affectedRows === 0 ? res.status(204).json({ message: 'User already logged out', status: 204 }) : res.status(200).json({ message: 'Logout successful', status: 200 });
     } catch (error) {
-        return res.status(500).json({ message: 'Failed to access DB' });
+        return res.status(500).json({ message: error.stack, status: 500 });
     }
 }
+
+// //GET get id token
+// const getUser = async (req, res) => {
+//     // getting email form access token
+//     const userEmail = req.userEmail;
+//     try {
+//         // finding user data
+//         const result = await pool.execute<OkPacket>('SELECT * FROM users WHERE email = ?', [userEmail]);
+//         if(Array.isArray(result[0]) && result[0].length === 0) return res.status(404).json({ message: 'user not found' });
+        
+//         // forming idToken and sending result
+//         const foundUser = result[0][0];
+//         const idToken: IIdToken = {
+//             name: foundUser.name,
+//             surname: foundUser.surname,
+//             picture: foundUser.picture,
+//             email: foundUser.email,
+//             email_confirmed: foundUser.email_confirmed,
+//             locale: foundUser.locale,
+//             darkmode: foundUser.darkmode,
+//             authislocal: foundUser.authislocal
+//         };
+//         return res.status(200).json({ idToken });
+//     } catch (error) {
+//         return res.status(500).json({ message: 'Failed to access DB' });
+//     }
+// }
 
 // PUT request. User email confirmation
 const confirmUser = async (req, res) => {
@@ -85,7 +99,7 @@ const schemaUpdateUser = Joi.object ({
     oldpassword: Joi.string(),
     newpassword: Joi.string().pattern(new RegExp(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{5,60}$/)),
     // preferred theme s - system, d - dark, l - light
-    preferredtheme: Joi.string().valid('s', 'd', 'l'),
+    darkmode: Joi.boolean(),
     locale: Joi.string().valid('en-US'),
     picture: Joi.string()
 }).and('oldpassword', 'newpassword'); // checking that if oldpassword present, new password must be present and vice versa
@@ -141,21 +155,12 @@ const updateUser = async (req, res) => {
     } catch (error) {
         return res.status(500).json({ message: `Error executing query ${error.stack}` });
     }
-
-    // const idToken: IIdToken = {
-    //     name: foundUser.name,
-    //     surname: foundUser.surname,
-    //     picture: foundUser.picture,
-    //     email: foundUser.email,
-    //     locale: foundUser.locale,
-    //     preferredtheme: foundUser.preferredtheme,
-    // };
 }
 
 // DELETE request. Deletes user and associated data from BD
 const deleteUser = async (req, res) => {
     const { email } = req.body;
-    if(!email) return res.status(400).json({ message: 'email required' });
+    if(!email) return res.status(400).json({ message: 'email required', status: 400 });
     const userEmail = req.userEmail;
     if(email !== userEmail) return res.sendStatus(403);
 
@@ -166,11 +171,13 @@ const deleteUser = async (req, res) => {
         if(result[0].affectedRows === 1) {
             // deleting user's todos
             await pool.execute<OkPacket>('DELETE FROM todos WHERE useremail = ?', [email]);
-            return res.status(200).json({ message: `Deleted user: ${email}` });
-        } else return res.sendStatus(204);
+
+            res.cookie('dailyplanner', '', { httpOnly: true, sameSite: 'None', secure: true, maxAge: 0 }); 
+            return res.status(200).json({ message: `Deleted user: ${email}`, status: 200 });
+        } else return res.status(204).json({ message: 'User not found', status: 204 });
     } catch (error) {
-        return res.sendStatus(500).json({ message: `There was an error: ${error.message}` });
+        return res.sendStatus(500).json({ message: `There was an error: ${error.message}`, status: 500 });
     }
 }
 
-export default { deleteUser, confirmUser, updateUser, getUser, schemaUpdateUser }
+export default { deleteUser, confirmUser, updateUser, logoutUser }

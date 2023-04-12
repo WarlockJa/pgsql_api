@@ -22,11 +22,11 @@ export interface IUser {
   surname: string;
   picture: string;
   email: string;
-  email_confirmed: boolean;
+  email_confirmed: number;
   locale: string;
   refreshtoken: string;
   password: string;
-  preferredtheme: number;
+  darkmode: number;
   authislocal: number;
 }
 

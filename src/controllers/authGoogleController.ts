@@ -2,7 +2,6 @@ import { pool } from '../db/DBConnect.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { LiteralLocale } from './registerController.js';
-import Joi from 'joi';
 import { IIdToken } from './authController.js';
 
 interface IAuthGoogle {
@@ -34,23 +33,6 @@ async function verifyGoogleCredentials({ access_token }: IAuthGoogle) {
     }
 }
 
-// joi schema for google authentication request body
-const schema = Joi.object({
-    access_token: Joi.string()
-        .pattern(new RegExp(/^[a-zA-Z0-9\-_.]{20,250}$/))
-        .required(),
-    preferredtheme: Joi.string()
-        .valid('s', 'd', 'l')
-});
-
-const isValidPreferredTheme = (preferredtheme: string) => {
-    return(
-        typeof preferredtheme === 'string' &&
-        preferredtheme !== null &&
-        preferredtheme === 's' || preferredtheme === 'd' || preferredtheme === 'l'
-    )
-}
-
 // POST request. Authentication via Google with following authorization/registration
 const authGoogleUser = async (req, res) => {
     // validating request body
@@ -58,8 +40,8 @@ const authGoogleUser = async (req, res) => {
     // if(validationResult.error) return res.status(400).json(validationResult.error.details[0].message);
     
     const { access_token } = req.body;
-    // assigning default value to preferredtheme if not present in the request body
-    const preferredtheme = isValidPreferredTheme(req.body.preferredtheme) ? req.body.preferredtheme : 's';
+    // assigning default value to darkmode if not present in the request body or not truthy
+    const darkmode = req.body.darkmode ? true : false;
 
     // verifying user and fetching user data from Google api
     const userGoogleData: AuthGoogleResponse = await verifyGoogleCredentials({ access_token });
@@ -95,13 +77,13 @@ const authGoogleUser = async (req, res) => {
                 surname: family_name ? family_name : '',
                 picture: picture,
                 email: email,
-                email_confirmed: email_verified ? 1 : 0,
+                email_confirmed: email_verified,
                 locale: locale,
-                preferredtheme: preferredtheme,
-                authislocal: 0
+                darkmode: darkmode,
+                authislocal: false
             };
             // console.log(idToken)
-            await pool.execute('INSERT INTO users (email, email_confirmed, name, surname, locale, password, refreshtoken, preferredtheme, authislocal) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)',[email, email_verified, idToken.name, idToken.surname, locale, hashedPassword, refreshToken, preferredtheme, 0]);
+            await pool.execute('INSERT INTO users (email, email_confirmed, name, surname, locale, password, refreshtoken, darkmode, authislocal) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)',[email, email_verified, idToken.name, idToken.surname, locale, hashedPassword, refreshToken, darkmode, 0]);
 
         } else {
             // user found, updating refresh token
@@ -116,7 +98,7 @@ const authGoogleUser = async (req, res) => {
                 email: foundUser.email,
                 email_confirmed: foundUser.email_confirmed,
                 locale: foundUser.locale,
-                preferredtheme: foundUser.preferredtheme,
+                darkmode: foundUser.darkmode,
                 authislocal: foundUser.authislocal
             };
         }

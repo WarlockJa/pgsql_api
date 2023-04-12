@@ -14,18 +14,17 @@ const schemaRegisterUser = Joi.object ({
     password: Joi.string()
         .pattern(new RegExp(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{5,60}$/))
         .required(),
-    preferredtheme: Joi.string().valid('s', 'd', 'l'),
+    darkmode: Joi.boolean(),
     locale: Joi.string().valid('en-US')
 });
 
 export type LiteralLocale = 'en-US';
-export type LiteralPreferredtheme = 's' | 'd' | 'l';
 
 interface IUser {
     email: string;
     name: string;
     password: string;
-    preferredtheme?: LiteralPreferredtheme;
+    darkmode?: boolean;
     locale?: LiteralLocale;
 }
 
@@ -34,8 +33,8 @@ const registerUser = async (req: { body: IUser }, res) => {
     // Joi schema validation
     const validationResult = await schemaRegisterUser.validate(req.body);
     if(validationResult.error) return res.status(400).json(validationResult.error.details[0].message);
-    // assigning default value to preferredtheme field if not present in the body
-    const preferredtheme = req.body.preferredtheme ? req.body.preferredtheme : 's';
+    // assigning default value to darkmode field if not present in the body
+    const darkmode = req.body.darkmode ? 1 : 0;
     // assigning default value to locale field if not present in the body
     const locale = req.body.locale ? req.body.locale : 'en-US';
     const { email, name, password } = validationResult.value;
@@ -51,7 +50,7 @@ const registerUser = async (req: { body: IUser }, res) => {
     // adding new user
     try {
         const hashedPassword = await bcrypt.hash(password, 10);
-        await pool.execute('INSERT INTO users (email, name, password, email_confirmed, preferredtheme, locale) VALUES(?, ?, ?, ?, ?, ?)',[email, name, hashedPassword, 0, preferredtheme, locale]);
+        await pool.execute('INSERT INTO users (email, name, password, email_confirmed, darkmode, locale) VALUES(?, ?, ?, ?, ?, ?)',[email, name, hashedPassword, 0, darkmode, locale]);
         return res.status(201).json({ message: `Added user: ${name}` });
     } catch (error) {
         return res.sendStatus(500).json({ message: `There was an error: ${error.message}` });

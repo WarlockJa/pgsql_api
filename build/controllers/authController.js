@@ -29,10 +29,10 @@ const authUser = async (req, res) => {
             surname: foundUser.surname,
             picture: foundUser.picture,
             email: foundUser.email,
-            email_confirmed: foundUser.email_confirmed,
+            email_confirmed: foundUser.email_confirmed ? true : false,
             locale: foundUser.locale,
-            preferredtheme: foundUser.preferredtheme,
-            authislocal: foundUser.authislocal
+            darkmode: foundUser.darkmode ? true : false,
+            authislocal: foundUser.authislocal ? true : false
         };
         // sending access token and id token on authorization success
         // WARNING: keep access token in memory only
@@ -68,26 +68,25 @@ const reauthUser = async (req, res) => {
             surname: foundUser.surname,
             picture: foundUser.picture,
             email: foundUser.email,
-            email_confirmed: foundUser.email_confirmed,
+            email_confirmed: foundUser.email_confirmed ? true : false,
             locale: foundUser.locale,
-            preferredtheme: foundUser.preferredtheme,
-            authislocal: foundUser.authislocal
+            darkmode: foundUser.darkmode ? true : false,
+            authislocal: foundUser.authislocal ? true : false
         };
         // sending renewed access token and a new cookie with refresh token
         return res.status(200).json({ accessToken, idToken });
     });
 };
-// PUT request. User logout. DB and client side refresh token removal
-const logoutUser = async (req, res) => {
-    const cookies = req.cookies;
-    if (!cookies.dailyplanner)
-        return res.sendStatus(204);
-    const refreshToken = cookies.dailyplanner;
-    // checking if refresh token exists in DB and removing it
-    const result = await pool.execute('UPDATE users SET refreshtoken = null WHERE refreshtoken = ?', [refreshToken]);
-    // deleting client-side cookie
-    res.cookie('dailyplanner', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 0 });
-    return result[0].affectedRows === 0 ? res.sendStatus(204) : res.status(200).json({ message: 'Logout successful' });
-};
-export default { authUser, reauthUser, logoutUser };
+// // PUT request. User logout. DB and client side refresh token removal
+// const logoutUser = async(req, res) => {
+//     const cookies = req.cookies;
+//     if(!cookies.dailyplanner) return res.sendStatus(204);
+//     const refreshToken = cookies.dailyplanner;
+//     // checking if refresh token exists in DB and removing it
+//     const result = await pool.execute<OkPacket>('UPDATE users SET refreshtoken = null WHERE refreshtoken = ?', [refreshToken]);
+//     // deleting client-side cookie
+//     res.cookie('dailyplanner', refreshToken, { httpOnly: true, sameSite: 'None', secure: true, maxAge: 0 }); 
+//     return result[0].affectedRows === 0 ? res.sendStatus(204) : res.status(200).json({ message: 'Logout successful' });
+// }
+export default { authUser, reauthUser };
 //# sourceMappingURL=authController.js.map
