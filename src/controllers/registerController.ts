@@ -15,10 +15,10 @@ const schemaRegisterUser = Joi.object ({
         .pattern(new RegExp(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{5,60}$/))
         .required(),
     darkmode: Joi.boolean(),
-    locale: Joi.string().valid('en-US')
+    locale: Joi.string().valid('en', 'ru', 'ru-RU', 'en-US', 'en-GB', 'en-ZW', 'en-AU', 'en-BZ', 'en-CA', 'en-IE', 'en-JM', 'en-NZ', 'en-PH', 'en-ZA', 'en-TT', 'en-VI')
 });
 
-export type LiteralLocale = 'en-US';
+export type LiteralLocale = 'en' | 'ru';
 
 interface IUser {
     email: string;

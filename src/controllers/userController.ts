@@ -100,7 +100,7 @@ const schemaUpdateUser = Joi.object ({
     newpassword: Joi.string().pattern(new RegExp(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{5,60}$/)),
     // preferred theme s - system, d - dark, l - light
     darkmode: Joi.boolean(),
-    locale: Joi.string().valid('en-US'),
+    locale: Joi.string().valid('en', 'ru', 'ru-RU', 'en-US', 'en-GB', 'en-ZW', 'en-AU', 'en-BZ', 'en-CA', 'en-IE', 'en-JM', 'en-NZ', 'en-PH', 'en-ZA', 'en-TT', 'en-VI'),
     picture: Joi.string()
 }).and('oldpassword', 'newpassword'); // checking that if oldpassword present, new password must be present and vice versa
 
