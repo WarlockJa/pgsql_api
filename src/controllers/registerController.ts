@@ -18,7 +18,7 @@ const schemaRegisterUser = Joi.object ({
     locale: Joi.string().valid('en', 'ru', 'ru-RU', 'en-US', 'en-GB', 'en-ZW', 'en-AU', 'en-BZ', 'en-CA', 'en-IE', 'en-JM', 'en-NZ', 'en-PH', 'en-ZA', 'en-TT', 'en-VI')
 });
 
-export type LiteralLocale = 'en' | 'ru';
+export type LiteralLocale = 'en' | 'ru' | 'ru-RU' | 'en-US' | 'en-GB' | 'en-ZW' | 'en-AU' | 'en-BZ' | 'en-CA' | 'en-IE' | 'en-JM' | 'en-NZ' | 'en-PH' | 'en-ZA' | 'en-TT' | 'en-VI';
 
 interface IUser {
     email: string;
