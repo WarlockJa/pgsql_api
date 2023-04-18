@@ -6,7 +6,7 @@ import { OkPacket } from 'mysql2';
 export interface IIdToken {
     name: string;
     surname: string;
-    picture: string;
+    picture: Blob;
     email: string;
     email_confirmed: boolean;
     locale: string;

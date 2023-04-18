@@ -93,7 +93,7 @@ const schemaUpdateUser = Joi.object({
     // preferred theme s - system, d - dark, l - light
     darkmode: Joi.boolean(),
     locale: Joi.string().valid('en', 'ru', 'ru-RU', 'en-US', 'en-GB', 'en-ZW', 'en-AU', 'en-BZ', 'en-CA', 'en-IE', 'en-JM', 'en-NZ', 'en-PH', 'en-ZA', 'en-TT', 'en-VI'),
-    picture: Joi.string()
+    picture: Joi.object()
 }).and('oldpassword', 'newpassword'); // checking that if oldpassword present, new password must be present and vice versa
 // POST request. Updates user data in the DB
 const updateUser = async (req, res) => {

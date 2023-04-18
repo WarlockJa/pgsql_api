@@ -24,7 +24,7 @@ const authGoogleUser = async (req, res) => {
     const darkmode = req.body.darkmode ? true : false;
     // verifying user and fetching user data from Google api
     const userGoogleData = await verifyGoogleCredentials({ access_token });
-    const { sub, given_name, name, family_name, picture, email, email_verified, locale } = userGoogleData;
+    const { sub, given_name, name, family_name, email, email_verified, locale } = userGoogleData;
     // if no user data sending error
     if (!email)
         return res.status(500).json({ message: userGoogleData });
@@ -42,7 +42,7 @@ const authGoogleUser = async (req, res) => {
             idToken = {
                 name: given_name ? given_name : name,
                 surname: family_name ? family_name : '',
-                picture: picture,
+                picture: null,
                 email: email,
                 email_confirmed: email_verified,
                 locale: locale,

@@ -20,7 +20,7 @@ export const pool = mysql.createPool({
 export interface IUser {
   name: string;
   surname: string;
-  picture: string;
+  picture: Blob;
   email: string;
   email_confirmed: number;
   locale: string;

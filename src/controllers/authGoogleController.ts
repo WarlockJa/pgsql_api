@@ -13,7 +13,7 @@ type AuthGoogleResponse = {
     name: string;
     given_name: string;
     family_name: string;
-    picture: string;
+    // picture: string;
     email: string;
     email_verified: boolean;
     locale: LiteralLocale;
@@ -45,7 +45,7 @@ const authGoogleUser = async (req, res) => {
 
     // verifying user and fetching user data from Google api
     const userGoogleData: AuthGoogleResponse = await verifyGoogleCredentials({ access_token });
-    const { sub, given_name, name, family_name, picture, email, email_verified, locale } = userGoogleData;
+    const { sub, given_name, name, family_name, email, email_verified, locale } = userGoogleData;
 
     // if no user data sending error
     if(!email) return res.status(500).json({ message: userGoogleData });
@@ -75,7 +75,7 @@ const authGoogleUser = async (req, res) => {
             idToken = {
                 name: given_name ? given_name : name,
                 surname: family_name ? family_name : '',
-                picture: picture,
+                picture: null,  //TODO maybe blob up the Google picture?
                 email: email,
                 email_confirmed: email_verified,
                 locale: locale,

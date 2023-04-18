@@ -1,3 +1,3 @@
-CREATE TABLE users (email VARCHAR(255) PRIMARY KEY, password CHAR(60), email_confirmed tinyint(1) NOT NULL, name VARCHAR(255), surname TEXT, picture TEXT, locale CHAR(5), darkmode TINYINT(1) DEFAULT '0', authislocal tinyint(1) DEFAULT '1', refreshtoken TEXT);
+CREATE TABLE users (email VARCHAR(255) PRIMARY KEY, password CHAR(60), email_confirmed tinyint(1) NOT NULL, name VARCHAR(255), surname TEXT, picture BLOB, locale CHAR(5), darkmode TINYINT(1) DEFAULT '0', authislocal tinyint(1) DEFAULT '1', refreshtoken TEXT);
 CREATE TABLE todos (id BINARY(16) PRIMARY KEY, useremail VARCHAR(255), title VARCHAR(75), description VARCHAR(255), completed tinyint(1) NOT NULL DEFAULT '0', reminder tinyint(1) NOT NULL DEFAULT '0', date_due DATETIME, date_created DATETIME DEFAULT CURRENT_TIMESTAMP);
 CREATE TABLE verify (email VARCHAR(255) PRIMARY KEY, token TEXT, ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP);
