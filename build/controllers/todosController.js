@@ -11,7 +11,7 @@ const getTodos = async (req, res) => {
         return res.status(200).json(resultWithIDasUUID);
     }
     catch (error) {
-        return res.status(500).json({ message: `Error executing query ${error.stack}` });
+        return res.status(500).json({ message: `Error executing query ${error.stack}`, status: 500 });
     }
 };
 // Joi schema for addTodo
@@ -38,7 +38,7 @@ const addTodo = async (req, res) => {
     // Joi schema validation
     const validationResult = await schemaAddTodo.validate(req.body);
     if (validationResult.error)
-        return res.status(400).json(validationResult.error.details[0].message);
+        return res.status(400).json({ message: validationResult.error.details[0].message, status: 400 });
     // validated data
     const { useremail, title, description, date_due, reminder } = validationResult.value;
     // forming SQL request from valid fields
@@ -55,10 +55,10 @@ const addTodo = async (req, res) => {
     // writing to DB
     try {
         await pool.execute('INSERT INTO todos (id, useremail, title, description, reminder, date_due) VALUES(?,?,?,?,?,?)', insertMySQLdependencyArray);
-        return res.status(201).send({ message: `Added todo with ID ${todoIDtoBIN.uuid}` });
+        return res.status(201).send({ message: `Added todo with ID ${todoIDtoBIN.uuid}`, status: 201 });
     }
     catch (error) {
-        return res.status(500).json({ message: `Error executing query ${error.stack}` });
+        return res.status(500).json({ message: `Error executing query ${error.stack}`, status: 500 });
     }
     // INSERT INTO table_name (field1, field2 ...) VALUES ($1, $2 ...)
     // Postgres syntax
@@ -103,7 +103,7 @@ const updateTodo = async (req, res) => {
     // Joi schema validation
     const validationResult = await schemaUpdateTodo.validate(req.body);
     if (validationResult.error)
-        return res.status(400).json(validationResult.error.details[0].message);
+        return res.status(400).json({ message: validationResult.error.details[0].message, status: 400 });
     // validated fields
     const { id, title, completed, description, date_due, reminder } = validationResult.value;
     // validating data, removing undefined optional fields from further processing
@@ -123,7 +123,7 @@ const updateTodo = async (req, res) => {
     Object.keys(validFields).forEach(key => validFields[key] === undefined && delete validFields[key]);
     // if only id field valid no need to update
     if (Object.keys(validFields).length === 1)
-        return res.sendStatus(200);
+        return res.status(200).json({ message: 'Nothing to update', status: 200 });
     // forming SQL request from valid fields
     let queryString = ''; // 'field1 = ?, field2 = ?, ... , fieldN = ?'
     const queryArray = Object.entries(validFields).map((item) => {
@@ -134,10 +134,10 @@ const updateTodo = async (req, res) => {
     // writing to DB
     try {
         await pool.execute(`UPDATE todos SET ${queryString} WHERE id=?`, queryArray);
-        return res.status(201).send({ message: `Updated todo with ID ${id}` });
+        return res.status(200).send({ message: `Updated todo with ID ${id}`, status: 200 });
     }
     catch (error) {
-        return res.status(500).json({ message: `Error executing query ${error.stack}` });
+        return res.status(500).json({ message: `Error executing query ${error.stack}`, status: 500 });
     }
     // UPDATE table_name SET field1 = ?, field2 = ? ... WHERE id = ?
     // Postgres logic
@@ -176,14 +176,14 @@ const updateTodo = async (req, res) => {
 const deleteTodo = async (req, res) => {
     const { id } = req.body;
     if (!id)
-        return res.status(400).json({ message: "ID required" });
+        return res.status(400).json({ message: "ID required", status: 400 });
     const binaryUUID = toBinaryUUID(id);
     try {
         const result = await pool.execute('DELETE FROM todos WHERE id = ?', [binaryUUID]);
-        return result[0].affectedRows > 0 ? res.status(200).send({ message: `Deleted todo with ID: ${id}` }) : res.status(404).send({ message: `Not found todo entry with ID: ${id}` });
+        return result[0].affectedRows > 0 ? res.status(200).send({ message: `Deleted todo with ID: ${id}`, status: 200 }) : res.status(404).send({ message: `Not found todo entry with ID: ${id}`, status: 404 });
     }
     catch (error) {
-        res.status(500).json({ message: `Error executing query ${error.stack}` });
+        res.status(500).json({ message: `Error executing query ${error.stack}`, status: 500 });
     }
 };
 export default { getTodos, addTodo, updateTodo, deleteTodo };
