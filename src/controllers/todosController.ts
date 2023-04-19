@@ -1,5 +1,6 @@
 import { IUser, pool } from '../db/DBConnect.js';
 import { createBinaryUUID, fromBinaryUUID, toBinaryUUID } from "binary-uuid";
+import Joi from 'joi';
 import { OkPacket, RowDataPacket } from 'mysql2';
  
 interface ITodoResult {
@@ -19,21 +20,34 @@ const getTodos = async (req, res) => {
     }
 }
 
-interface IAddTodoRequestBody {
-    useremail: number;          // required id of the user associated with the todo
-    title: string;              // required title of the todo
-    description?: string;       // description of the todo
-    date_due?: Date;            // date when due for the todo
-    reminder?: boolean;         // flag to send a reminder for the date due
-}
+// Joi schema for addTodo
+const schemaAddTodo = Joi.object ({
+    // user email
+    useremail: Joi.string()
+        .email()
+        .required(),
+    // todo title
+    title: Joi.string()
+        .min(1)
+        .max(74)
+        .required(),
+    // todo description
+    description: Joi.string()
+        .min(0)
+        .max(254),
+    // todo reminder setting state
+    reminder: Joi.number().valid(1, 0),
+    // todo date of reminder
+    date_due: Joi.date()
+});
 
 const addTodo = async (req, res) => {
-    const { useremail, title, description, date_due, reminder } = req.body;
-    
-    // data validation
-    if(useremail === undefined || title === undefined) return res.status(400).send({ message: 'Useremail and Title required' });
+    // Joi schema validation
+    const validationResult = await schemaAddTodo.validate(req.body);
+    if(validationResult.error) return res.status(400).json(validationResult.error.details[0].message);
 
-    // TODO validate data based on DB types
+    // validated data
+    const { useremail, title, description, date_due, reminder } = validationResult.value;
 
     // forming SQL request from valid fields
     // creating UUID/binary buffer pair as DB accepts BINARY(16) as primary key
