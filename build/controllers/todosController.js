@@ -86,8 +86,7 @@ const schemaUpdateTodo = Joi.object({
     // todo title
     title: Joi.string()
         .min(1)
-        .max(74)
-        .required(),
+        .max(74),
     // todo description
     description: Joi.string()
         .min(0)
