@@ -1,4 +1,4 @@
-import { IUser, pool } from '../db/DBConnect.js';
+import { pool } from '../db/DBConnect.js';
 import { createBinaryUUID, fromBinaryUUID, toBinaryUUID } from "binary-uuid";
 import Joi from 'joi';
 import { OkPacket, RowDataPacket } from 'mysql2';
@@ -101,9 +101,40 @@ interface IUpdateTodoRequestBody {
     // reminder_interval?: number; // time interval before the reminder is sent (minutes?)
 }
 
+interface IUpdateTodoValidationResult {
+    value: IUpdateTodoRequestBody
+    error?: Joi.ValidationError
+    warning?: Joi.ValidationError
+}
+
+// Joi schema for updateTodo
+const schemaUpdateTodo = Joi.object ({
+    id: Joi.string()
+        .required(),
+    // todo title
+    title: Joi.string()
+        .min(1)
+        .max(74)
+        .required(),
+    // todo description
+    description: Joi.string()
+        .min(0)
+        .max(254),
+    // todo completed state
+    completed: Joi.number().valid(1, 0),
+    // todo reminder setting state
+    reminder: Joi.number().valid(1, 0),
+    // todo date of reminder
+    date_due: Joi.date()
+});
+
 const updateTodo = async (req: { body: IUpdateTodoRequestBody }, res) => {
-    const { id, useremail, title, completed, description, date_due, reminder } = req.body;
-    if (!id) return res.status(400).send({ message: 'Todo ID required' });
+    // Joi schema validation
+    const validationResult: IUpdateTodoValidationResult = await schemaUpdateTodo.validate(req.body);
+    if(validationResult.error) return res.status(400).json(validationResult.error.details[0].message);
+
+    // validated fields
+    const { id, title, completed, description, date_due, reminder } = validationResult.value;
 
     // validating data, removing undefined optional fields from further processing
     // invalidating reminder and reminder_interval if no date_due is set
@@ -113,7 +144,6 @@ const updateTodo = async (req: { body: IUpdateTodoRequestBody }, res) => {
 
     // removing undefined fields from processing
     let validFields = {
-        useremail,
         title,
         completed,
         description,

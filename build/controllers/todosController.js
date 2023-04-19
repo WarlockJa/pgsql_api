@@ -79,10 +79,33 @@ const addTodo = async (req, res) => {
     //     return res.status(201).send({ message: `Added todo with ID: ${result.rows[0].id}` })
     // })
 };
+// Joi schema for updateTodo
+const schemaUpdateTodo = Joi.object({
+    id: Joi.string()
+        .required(),
+    // todo title
+    title: Joi.string()
+        .min(1)
+        .max(74)
+        .required(),
+    // todo description
+    description: Joi.string()
+        .min(0)
+        .max(254),
+    // todo completed state
+    completed: Joi.number().valid(1, 0),
+    // todo reminder setting state
+    reminder: Joi.number().valid(1, 0),
+    // todo date of reminder
+    date_due: Joi.date()
+});
 const updateTodo = async (req, res) => {
-    const { id, useremail, title, completed, description, date_due, reminder } = req.body;
-    if (!id)
-        return res.status(400).send({ message: 'Todo ID required' });
+    // Joi schema validation
+    const validationResult = await schemaUpdateTodo.validate(req.body);
+    if (validationResult.error)
+        return res.status(400).json(validationResult.error.details[0].message);
+    // validated fields
+    const { id, title, completed, description, date_due, reminder } = validationResult.value;
     // validating data, removing undefined optional fields from further processing
     // invalidating reminder and reminder_interval if no date_due is set
     const date_duePlaceholder = reminder
@@ -90,7 +113,6 @@ const updateTodo = async (req, res) => {
         : undefined;
     // removing undefined fields from processing
     let validFields = {
-        useremail,
         title,
         completed,
         description,
