@@ -30,10 +30,11 @@ const schemaAddTodo = Joi.object({
         .min(0)
         .max(254),
     // todo reminder setting state
-    reminder: Joi.number().valid(1, 0),
+    reminder: [Joi.number().valid(1, 0), Joi.boolean()],
     // todo date of reminder
     date_due: Joi.date()
 });
+// POST request. Add new Todo
 const addTodo = async (req, res) => {
     // Joi schema validation
     const validationResult = await schemaAddTodo.validate(req.body);

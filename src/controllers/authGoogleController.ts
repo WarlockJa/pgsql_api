@@ -1,12 +1,10 @@
-import { pool } from '../db/DBConnect.js';
+import { IDBUserIdToken, IFrontEndUserIdToken, LiteralLocale, pool } from '../db/DBConnect.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { LiteralLocale } from './registerController.js';
-import { IIdToken } from './authController.js';
-
-interface IAuthGoogle {
-    access_token: string;
-}
+import { config } from 'dotenv';
+import Joi from 'joi';
+import { OkPacket } from 'mysql2';
+config();
 
 type AuthGoogleResponse = {
     sub: string;
@@ -19,31 +17,38 @@ type AuthGoogleResponse = {
     locale: LiteralLocale;
 }
 
-async function verifyGoogleCredentials({ access_token }: IAuthGoogle) {
-    // google api uri
-    const GOOGLE_URI = 'https://www.googleapis.com/oauth2/v3/userinfo?access_token=';
-
+async function verifyGoogleCredentials({ access_token }: IAuthGoogleUser) {
     try {
-        // Get the JSON with all the user info
-        const result = await fetch(GOOGLE_URI.concat() + access_token).then(response => response.json());
-        // This is a JSON object that contains all the user info
+        // Get the JSON with all the user info from Google API
+        const result = await fetch(process.env.GOOGLE_API_URI.concat() + access_token).then(response => response.json());
+        // This is a JSON object that contains all the user info from Google account
         return result;
     } catch (error) {
         return error;
     }
 }
 
+interface IAuthGoogleUser {
+    access_token: string;
+    darkmode?: boolean;
+}
+
+const schemaAuthGoogleUser = Joi.object<IAuthGoogleUser>({
+    access_token: Joi.string().required(),
+    darkmode: Joi.boolean()
+})
+
 // POST request. Authentication via Google with following authorization/registration
 const authGoogleUser = async (req, res) => {
     // validating request body
-    // const validationResult = await schema.validate(req.body);
-    // if(validationResult.error) return res.status(400).json(validationResult.error.details[0].message);
+    const validationResult = await schemaAuthGoogleUser.validate(req.body);
+    if(validationResult.error) return res.status(400).json(validationResult.error.details[0].message);
     
-    const { access_token } = req.body;
+    const { access_token } = validationResult.value;
     // assigning default value to darkmode if not present in the request body or not truthy
-    const darkmode = req.body.darkmode ? true : false;
+    const darkmode = validationResult.value.darkmode ? true : false;
 
-    // verifying user and fetching user data from Google api
+    // verifying user and fetching user data from Google API
     const userGoogleData: AuthGoogleResponse = await verifyGoogleCredentials({ access_token });
     const { sub, given_name, name, family_name, email, email_verified, locale } = userGoogleData;
 
@@ -52,7 +57,7 @@ const authGoogleUser = async (req, res) => {
 
     try {
         // check if user present in DB
-        const result = await pool.execute('SELECT * FROM users WHERE email = ?', [email]);
+        const result = await pool.execute<OkPacket>('SELECT * FROM users WHERE email = ?', [email]);
         
         // generating tokens
         const accessToken = jwt.sign(
@@ -67,7 +72,7 @@ const authGoogleUser = async (req, res) => {
         );
 
         
-        let idToken: IIdToken;
+        let idToken: IFrontEndUserIdToken;
         if(Array.isArray(result[0]) && result[0].length === 0) {
             // user not found. registration
             const hashedPassword = await bcrypt.hash(sub, 10); // dummy password, to prevent unauthorized access
@@ -80,9 +85,10 @@ const authGoogleUser = async (req, res) => {
                 email_confirmed: email_verified,
                 locale: locale,
                 darkmode: darkmode,
-                authislocal: false
+                authislocal: false,
+                hidecompleted: false
             };
-            // console.log(idToken)
+            // writing new user data into DB
             await pool.execute('INSERT INTO users (email, email_confirmed, name, surname, locale, password, refreshtoken, darkmode, authislocal) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)',[email, email_verified, idToken.name, idToken.surname, locale, hashedPassword, refreshToken, darkmode, 0]);
 
         } else {
@@ -90,16 +96,17 @@ const authGoogleUser = async (req, res) => {
             await pool.execute('UPDATE users SET refreshtoken = ? WHERE email = ?', [refreshToken, email]);
 
             // creating IdToken from DB data
-            const foundUser = result[0][0];
+            const foundUser: IDBUserIdToken = result[0][0];
             idToken = {
                 name: foundUser.name,
                 surname: foundUser.surname,
                 picture: foundUser.picture,
                 email: foundUser.email,
-                email_confirmed: foundUser.email_confirmed,
+                email_confirmed: foundUser.email_confirmed ? true : false,
                 locale: foundUser.locale,
-                darkmode: foundUser.darkmode,
-                authislocal: foundUser.authislocal
+                darkmode: foundUser.darkmode ? true : false,
+                authislocal: foundUser.authislocal ? true : false,
+                hidecompleted: foundUser.hidecompleted ? true : false
             };
         }
         // authorization

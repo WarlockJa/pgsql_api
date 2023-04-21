@@ -1,17 +1,13 @@
-import { pool } from '../db/DBConnect.js';
+import { IFrontEndTodo, pool } from '../db/DBConnect.js';
 import { createBinaryUUID, fromBinaryUUID, toBinaryUUID } from "binary-uuid";
 import Joi from 'joi';
-import { OkPacket, RowDataPacket } from 'mysql2';
+import { OkPacket } from 'mysql2';
  
-interface ITodoResult {
-    rows: { id: number; }[];
-}
-
 const getTodos = async (req, res) => {
     // getting user email from decoded access token
     const userEmail = req.userEmail;
     try {
-        const result = await pool.execute('SELECT * FROM todos WHERE useremail = ?', [userEmail]);
+        const result = await pool.execute<OkPacket>('SELECT * FROM todos WHERE useremail = ?', [userEmail]);
         // converting binary ID from MySQL into readable UUID
         const resultWithIDasUUID = Array.isArray(result[0]) ? result[0].map((todo) => ({ ...todo, id: fromBinaryUUID(todo.id) })) : result;
         return res.status(200).json(resultWithIDasUUID);
@@ -21,7 +17,7 @@ const getTodos = async (req, res) => {
 }
 
 // Joi schema for addTodo
-const schemaAddTodo = Joi.object ({
+const schemaAddTodo = Joi.object<IFrontEndTodo>({
     // user email
     useremail: Joi.string()
         .email()
@@ -36,11 +32,12 @@ const schemaAddTodo = Joi.object ({
         .min(0)
         .max(254),
     // todo reminder setting state
-    reminder: Joi.number().valid(1, 0),
+    reminder: [Joi.number().valid(1, 0), Joi.boolean()],
     // todo date of reminder
     date_due: Joi.date()
 });
 
+// POST request. Add new Todo
 const addTodo = async (req, res) => {
     // Joi schema validation
     const validationResult = await schemaAddTodo.validate(req.body);

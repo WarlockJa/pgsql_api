@@ -1,9 +1,9 @@
-import { pool } from '../db/DBConnect.js'
+import { ACCEPTED_LOCALES, LiteralLocale, pool } from '../db/DBConnect.js'
 import bcrypt from 'bcrypt'
 import { OkPacket } from 'mysql2';
 import Joi from 'joi';
 
-const schemaRegisterUser = Joi.object ({
+const schemaRegisterUser = Joi.object<IRegisterUser>({
     email: Joi.string()
         .email()
         .required(),
@@ -15,12 +15,11 @@ const schemaRegisterUser = Joi.object ({
         .pattern(new RegExp(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{5,60}$/))
         .required(),
     darkmode: Joi.boolean(),
-    locale: Joi.string().valid('en', 'ru', 'ru-RU', 'en-US', 'en-GB', 'en-ZW', 'en-AU', 'en-BZ', 'en-CA', 'en-IE', 'en-JM', 'en-NZ', 'en-PH', 'en-ZA', 'en-TT', 'en-VI')
+    locale: Joi.string().valid(...ACCEPTED_LOCALES)
 });
 
-export type LiteralLocale = 'en' | 'ru' | 'ru-RU' | 'en-US' | 'en-GB' | 'en-ZW' | 'en-AU' | 'en-BZ' | 'en-CA' | 'en-IE' | 'en-JM' | 'en-NZ' | 'en-PH' | 'en-ZA' | 'en-TT' | 'en-VI';
 
-interface IUser {
+interface IRegisterUser {
     email: string;
     name: string;
     password: string;
@@ -29,14 +28,14 @@ interface IUser {
 }
 
 // POST request. Registering new user with email-password pair
-const registerUser = async (req: { body: IUser }, res) => {
+const registerUser = async (req, res) => {
     // Joi schema validation
     const validationResult = await schemaRegisterUser.validate(req.body);
     if(validationResult.error) return res.status(400).json(validationResult.error.details[0].message);
     // assigning default value to darkmode field if not present in the body
-    const darkmode = req.body.darkmode ? 1 : 0;
+    const darkmode = validationResult.value.darkmode ? 1 : 0;
     // assigning default value to locale field if not present in the body
-    const locale = req.body.locale ? req.body.locale : 'en-US';
+    const locale = validationResult.value.locale ? validationResult.value.locale : 'en-US';
     const { email, name, password } = validationResult.value;
 
     // check if user already exists

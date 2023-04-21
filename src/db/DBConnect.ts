@@ -17,10 +17,13 @@ export const pool = mysql.createPool({
   queueLimit: 0
 });
 
-export interface IUser {
+export const ACCEPTED_LOCALES = ['en', 'ru', 'ru-RU', 'en-US', 'en-GB', 'en-ZW', 'en-AU', 'en-BZ', 'en-CA', 'en-IE', 'en-JM', 'en-NZ', 'en-PH', 'en-ZA', 'en-TT', 'en-VI'];
+export type LiteralLocale = 'en' | 'ru' | 'ru-RU' | 'en-US' | 'en-GB' | 'en-ZW' | 'en-AU' | 'en-BZ' | 'en-CA' | 'en-IE' | 'en-JM' | 'en-NZ' | 'en-PH' | 'en-ZA' | 'en-TT' | 'en-VI';
+
+export interface IDBUserIdToken {
   name: string;
   surname: string;
-  picture: Blob;
+  picture: string;
   email: string;
   email_confirmed: number;
   locale: string;
@@ -28,6 +31,41 @@ export interface IUser {
   password: string;
   darkmode: number;
   authislocal: number;
+  hidecompleted: number;
+}
+
+export interface IFrontEndUserIdToken {
+  name: string;
+  surname: string;
+  picture: string;
+  email: string;
+  email_confirmed: boolean;
+  locale: string;
+  darkmode: boolean;
+  authislocal: boolean;
+  hidecompleted: boolean;
+}
+
+export interface IDBTodo {
+  id: BinaryData;
+  useremail: string;
+  title: string;
+  description: string;
+  completed: number;
+  reminder: number;
+  date_due: Date;
+  date_created: Date;
+}
+
+export interface IFrontEndTodo {
+  id: string;
+  useremail: string;
+  title: string;
+  description: string;
+  completed: boolean;
+  reminder: boolean;
+  date_due: Date;
+  date_created: Date;
 }
 
 // export default {

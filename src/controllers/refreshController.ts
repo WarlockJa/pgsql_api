@@ -1,4 +1,4 @@
-import { pool } from '../db/DBConnect.js';
+import { IDBUserIdToken, pool } from '../db/DBConnect.js';
 import jwt from 'jsonwebtoken';
 import { OkPacket } from 'mysql2';
 
@@ -12,7 +12,7 @@ const refreshToken = async (req, res) => {
     // checking if refresh token exists in DB
     const result = await pool.execute<OkPacket>('SELECT refreshtoken, email FROM users WHERE refreshtoken = ?', [refreshToken]);
     if(Array.isArray(result[0]) && result[0].length === 0) return res.sendStatus(403);
-    const foundUser = result[0][0];
+    const foundUser: IDBUserIdToken = result[0][0];
 
     // verifying refresh token and reissuing both access and refresh tokens
     jwt.verify(cookies.dailyplanner, process.env.REFRESH_TOKEN_SECRET, async (err, result) => {

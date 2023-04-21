@@ -1,9 +1,8 @@
 import { OkPacket } from 'mysql2';
-import { IUser, pool } from '../db/DBConnect.js';
+import { ACCEPTED_LOCALES, IDBUserIdToken, pool } from '../db/DBConnect.js';
 import sendEmail from '../util/sendEmail.js';
 import crypto from 'crypto';
 import bcrypt from 'bcrypt';
-import { IIdToken } from './authController.js';
 import Joi from 'joi';
 
 // GET userLogout
@@ -76,6 +75,7 @@ const confirmUser = async (req, res) => {
     </body>`;
 
     const result = await sendEmail({
+        // TODO switch to actual email
         to: 'warlockja@gmail.com',
         // to: userEmailFromAccessToken,
         subject: 'Daily Planner Email verification',
@@ -85,9 +85,29 @@ const confirmUser = async (req, res) => {
     return res.status(200).json({ message: message });
 }
 
+interface IUpdateUserRequest {
+    name?: string;
+    surname?: string;
+    oldpassword?: string;
+    newpassword?: string;
+    darkmode?: boolean;
+    locale?: string;
+    picture?: string;
+    hidecompleted?: boolean;
+}
+
+interface IUpdateUserDBCommand {
+    name?: string;
+    surname?: string;
+    password?: string;
+    darkmode?: boolean;
+    locale?: string;
+    picture?: string;
+    hidecompleted?: boolean;
+}
 
 // Joi schema for updateUser
-const schemaUpdateUser = Joi.object ({
+const schemaUpdateUser = Joi.object<IUpdateUserRequest>({
     // user name
     name: Joi.string()
         .min(1)
@@ -97,11 +117,13 @@ const schemaUpdateUser = Joi.object ({
         min(0),
     // new password is checked for complexity rules
     oldpassword: Joi.string(),
-    newpassword: Joi.string().pattern(new RegExp(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{5,60}$/)),
-    // preferred theme s - system, d - dark, l - light
+    newpassword: Joi.string()
+        .pattern(new RegExp(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{5,60}$/)),
     darkmode: Joi.boolean(),
-    locale: Joi.string().valid('en', 'ru', 'ru-RU', 'en-US', 'en-GB', 'en-ZW', 'en-AU', 'en-BZ', 'en-CA', 'en-IE', 'en-JM', 'en-NZ', 'en-PH', 'en-ZA', 'en-TT', 'en-VI'),
-    picture: Joi.string()
+    locale: Joi.string()
+        .valid(...ACCEPTED_LOCALES),
+    picture: Joi.string(),
+    hidecompleted: Joi.boolean()
 }).and('oldpassword', 'newpassword'); // checking that if oldpassword present, new password must be present and vice versa
 
 // POST request. Updates user data in the DB
@@ -114,10 +136,12 @@ const updateUser = async (req, res) => {
     if(validationResult.error) return res.status(400).json(validationResult.error.details[0].message);
 
     // reading user data from DB
-    let foundUser: IUser;
+    let foundUser: IDBUserIdToken;
     try {
-        // TODO adjust list of fields needed
-        const result = await pool.execute<OkPacket>('SELECT * FROM users WHERE email = ?', [userEmail]);
+        // selecting password and authislocal fields from DB
+        // DB password to authorize password change
+        // authislocal to ensure that password changed for locally regiestered users only
+        const result = await pool.execute<OkPacket>('SELECT authislocal, password FROM users WHERE email = ?', [userEmail]);
         if(Array.isArray(result[0]) && result[0].length !== 0) {
             foundUser = result[0][0];
         } else {
@@ -127,8 +151,8 @@ const updateUser = async (req, res) => {
         return res.status(500).json({ message: `Error executing query ${error.stack}` });
     }
 
-    // variable that is to be used in forming SQL request
-    let validFields = validationResult.value;
+    // SQL request
+    let validFields:IUpdateUserDBCommand = validationResult.value;
     // processing password change attempt
     if(validFields['newpassword']) {
         // checking if attempting to change password for externally authenticated user (Google authentication)
@@ -145,7 +169,7 @@ const updateUser = async (req, res) => {
 
     // forming SQL request from valid fields
     let queryString = ''; // 'field1 = ?, field2 = ?, ... , fieldN = ?'
-    const queryArray = Object.entries(validationResult.value).map((item) => {
+    const queryArray = Object.entries(validFields).map((item) => {
         queryString += queryString !== '' ? `, ${item[0]} = ?` : `${item[0]} = ?`;
         return item[1];
     });
@@ -161,11 +185,8 @@ const updateUser = async (req, res) => {
 
 // DELETE request. Deletes user and associated data from BD
 const deleteUser = async (req, res) => {
-    const { email } = req.body;
-    if(!email) return res.status(400).json({ message: 'email required', status: 400 });
-    const userEmail = req.userEmail;
-    if(email !== userEmail) return res.sendStatus(403);
-
+    // user email from access token
+    const email = req.userEmail;
     // deleting user
     try {
         const result = await pool.execute<OkPacket>('DELETE FROM users WHERE email = ?',[email]);
@@ -173,7 +194,7 @@ const deleteUser = async (req, res) => {
         if(result[0].affectedRows === 1) {
             // deleting user's todos
             await pool.execute<OkPacket>('DELETE FROM todos WHERE useremail = ?', [email]);
-
+            // removing refresh token from the user PC
             res.cookie('dailyplanner', '', { httpOnly: true, sameSite: 'None', secure: true, maxAge: 0 }); 
             return res.status(200).json({ message: `Deleted user: ${email}`, status: 200 });
         } else return res.status(204).json({ message: 'User not found', status: 204 });
