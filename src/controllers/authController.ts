@@ -82,12 +82,12 @@ const reauthUser = async (req, res) => {
 
     // checking if refresh token exists in DB
     const result = await pool.execute<OkPacket>('SELECT * FROM users WHERE refreshtoken = ?', [refreshToken]);
-    if(Array.isArray(result[0]) && result[0].length === 0) return res.sendStatus(403);
+    if(Array.isArray(result[0]) && result[0].length === 0) return res.status(403).json({ message: 'Refresh token not found in DB', status: 403 });
     const foundUser: IDBUserIdToken = result[0][0];
 
     // verifying refresh token and reissuing both access and refresh tokens
     jwt.verify(cookies.dailyplanner, process.env.REFRESH_TOKEN_SECRET, async (err, result) => {
-        if(err) return res.status(403).json({ message: err.message });
+        if(err) return res.status(403).json({ message: err.message, status: 403 });
 
         const accessToken = jwt.sign(
             { "email": foundUser.email },
@@ -119,7 +119,7 @@ const reauthUser = async (req, res) => {
         };
 
         // sending renewed access token and a new cookie with refresh token
-        return res.status(200).json({ accessToken, idToken });
+        return res.status(200).json({ data: { accessToken, idToken }, status: 200 });
     });
 }
 

@@ -16,18 +16,22 @@ async function verifyGoogleCredentials({ access_token }) {
     }
 }
 const schemaAuthGoogleUser = Joi.object({
-    access_token: Joi.string().required(),
+    access_token: Joi.any().required(),
     darkmode: Joi.boolean()
 });
 // POST request. Authentication via Google with following authorization/registration
 const authGoogleUser = async (req, res) => {
     // validating request body
-    const validationResult = await schemaAuthGoogleUser.validate(req.body);
-    if (validationResult.error)
-        return res.status(400).json(validationResult.error.details[0].message);
-    const { access_token } = validationResult.value;
+    const { access_token } = req.body;
+    if (!access_token)
+        return res.status(400).json({ message: 'Access Token requried', status: 400 });
+    const darkmode = req.body.darkmode ? true : false;
+    // const validationResult = await schemaAuthGoogleUser.validate(req.body);
+    // if(validationResult.error) return res.status(400).json(validationResult.error.details[0].message);
+    // console.log(req.body)
+    // const { access_token } = validationResult.value;
+    // const darkmode = validationResult.value.darkmode ? true : false;
     // assigning default value to darkmode if not present in the request body or not truthy
-    const darkmode = validationResult.value.darkmode ? true : false;
     // verifying user and fetching user data from Google API
     const userGoogleData = await verifyGoogleCredentials({ access_token });
     const { sub, given_name, name, family_name, email, email_verified, locale } = userGoogleData;
