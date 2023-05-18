@@ -62,7 +62,8 @@ const authUser = async (req, res) => {
             locale: foundUser.locale,
             darkmode: foundUser.darkmode ? true : false,
             authislocal: foundUser.authislocal ? true : false,
-            hidecompleted: foundUser.hidecompleted ? true : false
+            hidecompleted: foundUser.hidecompleted ? true : false,
+            widgets: foundUser.widgets
         };
 
         // sending access token and id token on authorization success
@@ -115,7 +116,8 @@ const reauthUser = async (req, res) => {
             locale: foundUser.locale,
             darkmode: foundUser.darkmode ? true : false,
             authislocal: foundUser.authislocal ? true : false,
-            hidecompleted: foundUser.hidecompleted ? true : false
+            hidecompleted: foundUser.hidecompleted ? true : false,
+            widgets: foundUser.widgets
         };
 
         // sending renewed access token and a new cookie with refresh token

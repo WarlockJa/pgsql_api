@@ -32,6 +32,7 @@ export interface IDBUserIdToken {
   darkmode: number;
   authislocal: number;
   hidecompleted: number;
+  widgets: string;
 }
 
 export interface IFrontEndUserIdToken {
@@ -44,6 +45,7 @@ export interface IFrontEndUserIdToken {
   darkmode: boolean;
   authislocal: boolean;
   hidecompleted: boolean;
+  widgets: string;
 }
 
 export interface IDBTodo {

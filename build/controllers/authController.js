@@ -43,7 +43,8 @@ const authUser = async (req, res) => {
             locale: foundUser.locale,
             darkmode: foundUser.darkmode ? true : false,
             authislocal: foundUser.authislocal ? true : false,
-            hidecompleted: foundUser.hidecompleted ? true : false
+            hidecompleted: foundUser.hidecompleted ? true : false,
+            widgets: foundUser.widgets
         };
         // sending access token and id token on authorization success
         // WARNING: keep access token in memory only
@@ -83,7 +84,8 @@ const reauthUser = async (req, res) => {
             locale: foundUser.locale,
             darkmode: foundUser.darkmode ? true : false,
             authislocal: foundUser.authislocal ? true : false,
-            hidecompleted: foundUser.hidecompleted ? true : false
+            hidecompleted: foundUser.hidecompleted ? true : false,
+            widgets: foundUser.widgets
         };
         // sending renewed access token and a new cookie with refresh token
         return res.status(200).json({ data: { accessToken, idToken }, status: 200 });

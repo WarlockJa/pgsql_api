@@ -91,7 +91,8 @@ const authGoogleUser = async (req, res) => {
                 locale: locale,
                 darkmode: darkmode,
                 authislocal: false,
-                hidecompleted: false
+                hidecompleted: false,
+                widgets: null
             };
             // writing new user data into DB
             await pool.execute('INSERT INTO users (email, email_confirmed, name, surname, locale, password, refreshtoken, darkmode, authislocal) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)',[email, email_verified, idToken.name, idToken.surname, locale, hashedPassword, refreshToken, darkmode, 0]);
@@ -111,7 +112,8 @@ const authGoogleUser = async (req, res) => {
                 locale: foundUser.locale,
                 darkmode: foundUser.darkmode ? true : false,
                 authislocal: foundUser.authislocal ? true : false,
-                hidecompleted: foundUser.hidecompleted ? true : false
+                hidecompleted: foundUser.hidecompleted ? true : false,
+                widgets: foundUser.widgets
             };
         }
         // authorization
