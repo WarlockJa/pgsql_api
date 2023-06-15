@@ -1,3 +1,3 @@
-const allowedOrigin = ['https://warlockja.ru', 'http://localhost:5000', 'http://localhost:5173'];
+const allowedOrigin = ["https://daily-planner-sigma.vercel.app/"];
 export default allowedOrigin;
 //# sourceMappingURL=allowedOrigin.js.map
