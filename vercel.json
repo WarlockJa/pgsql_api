@@ -1,6 +1,6 @@
 {
     "version": 2,
-    "name": "wj-pgsql-api",
+    "name": "pgsql-api",
     "builds": [{ "src": "server.js", "use": "@vercel/node" }],
     "routes": [{ "src": "/(.*)", "dest": "server.js" }]
 }
