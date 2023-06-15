@@ -1,0 +1,6 @@
+{
+    "version": 2,
+    "name": "wj-psmysql-api",
+    "builds": [{ "src": "server.js", "use": "@vercel/node" }],
+    "routes": [{ "src": "/build/(.*)", "dest": "server.js" }]
+}
