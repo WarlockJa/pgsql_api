@@ -1,1 +1,0 @@
-{"version":3,"file":"verifyEmail.js","sourceRoot":"","sources":["../../src/routes/verifyEmail.ts"],"names":[],"mappings":"AAAA,OAAO,OAAO,MAAM,SAAS,CAAC;AAC9B,MAAM,iBAAiB,GAAG,OAAO,CAAC,MAAM,EAAE,CAAC;AAC3C,OAAO,qBAAqB,MAAM,yCAAyC,CAAC;AAE5E,iBAAiB,CAAC,KAAK,CAAC,gBAAgB,CAAC;KACpC,GAAG,CAAC,qBAAqB,CAAC,UAAU,CAAC,CAAC;AAE3C,eAAe,iBAAiB,CAAC"}

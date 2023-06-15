@@ -1,1 +1,0 @@
-{"version":3,"file":"userdata.js","sourceRoot":"","sources":["../../src/routes/userdata.ts"],"names":[],"mappings":"AAAA,OAAO,OAAO,MAAM,SAAS,CAAC;AAC9B,MAAM,cAAc,GAAG,OAAO,CAAC,MAAM,EAAE,CAAC;AACxC,OAAO,kBAAkB,MAAM,sCAAsC,CAAC;AAEtE,cAAc,CAAC,KAAK,CAAC,GAAG,CAAC;KACpB,GAAG,CAAC,kBAAkB,CAAC,UAAU,CAAC,CAAC;AAExC,eAAe,cAAc,CAAC"}
