@@ -6,7 +6,8 @@ const corsOptions = {
         if (allowedOrigin.indexOf(origin) !== -1) {
             // !origin for localhost testing
             callback(null, origin);
-        } else {
+        }
+        else {
             callback(new Error("Not allowed by CORS"));
         }
     },

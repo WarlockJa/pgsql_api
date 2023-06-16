@@ -1,3 +1,6 @@
-const allowedOrigin = ["https://daily-planner-sigma.vercel.app"];
+const allowedOrigin = [
+    process.env.ALLOWED_ORIGIN_PROD,
+    process.env.ALLOWED_ORIGIN_DEV,
+];
 export default allowedOrigin;
 //# sourceMappingURL=allowedOrigin.js.map
