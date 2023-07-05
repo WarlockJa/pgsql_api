@@ -45,10 +45,8 @@ const verifyUser = async (req, res) => {
       true,
       email,
     ]);
-    // TODO return a proper html response
-    // return res.status(200).json({ message: `${email} verified` });
+    // redirecting user to the website on successful email verification
     return res.redirect(process.env.ALLOWED_ORIGIN_PROD);
-    // return res.status(200).json({ message: `${email} verified` });
   } catch (error) {
     return res.status(500).json({ message: error.stack });
   }
