@@ -9,7 +9,7 @@ const schemaRegisterUser = Joi.object({
     .required(),
   darkmode: Joi.boolean(),
   locale: Joi.string().valid(...ACCEPTED_LOCALES),
-  widgets: Joi.array().items(Joi.string().min(1).max(100)).required(),
+  widgets: Joi.array().items(Joi.string().min(1).max(100)),
 });
 // POST request. Registering new user with email-password pair
 const registerUser = async (req, res) => {
@@ -23,7 +23,10 @@ const registerUser = async (req, res) => {
   const locale = validationResult.value.locale
     ? validationResult.value.locale
     : "en-US";
-  const { email, name, password, widgets } = validationResult.value;
+  const widgets = validationResult.value.widgets
+    ? validationResult.value.widgets
+    : [];
+  const { email, name, password } = validationResult.value;
   // check if user already exists
   try {
     const result = await pool.execute("SELECT email FROM users WHERE email=?", [
