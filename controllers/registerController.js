@@ -9,7 +9,7 @@ const schemaRegisterUser = Joi.object({
     .required(),
   darkmode: Joi.boolean(),
   locale: Joi.string().valid(...ACCEPTED_LOCALES),
-  widgets: Joi.array().items(Joi.string()),
+  widgets: Joi.array().items(Joi.string().min(1).max(100)).required(),
 });
 // POST request. Registering new user with email-password pair
 const registerUser = async (req, res) => {
@@ -23,7 +23,7 @@ const registerUser = async (req, res) => {
   const locale = validationResult.value.locale
     ? validationResult.value.locale
     : "en-US";
-  const { email, name, password } = validationResult.value;
+  const { email, name, password, widgets } = validationResult.value;
   // check if user already exists
   try {
     const result = await pool.execute("SELECT email FROM users WHERE email=?", [
@@ -40,8 +40,8 @@ const registerUser = async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     await pool.execute(
-      "INSERT INTO users (email, name, password, email_confirmed, darkmode, locale) VALUES(?, ?, ?, ?, ?, ?)",
-      [email, name, hashedPassword, 0, darkmode, locale]
+      "INSERT INTO users (email, name, password, email_confirmed, darkmode, locale, widgets) VALUES(?, ?, ?, ?, ?, ?, ?)",
+      [email, name, hashedPassword, 0, darkmode, locale, widgets]
     );
     return res.status(201).json({ message: `Added user: ${name}` });
   } catch (error) {
