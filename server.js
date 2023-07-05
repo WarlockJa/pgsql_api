@@ -16,10 +16,9 @@ config();
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// testing route order
-app.get("/", (req, res) => {
-  res.send("API is running");
-});
+// routes outside cors policy
+app.get("/", (req, res) => res.send("API is running"));
+app.use("/verify", verifyEmailRouter);
 
 // middleware
 app.use(credentials);
@@ -27,12 +26,10 @@ app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 // routes
-// app.get('/', (req, res) => { res.send("API is running"); });
 app.use("/register", registerRouter);
 app.use("/auth", authRouter);
 app.use("/authgoogle", authGoogleRouter);
 app.use("/refresh", refreshRouter);
-app.use("/verify", verifyEmailRouter);
 app.use(verifyJWT);
 app.use("/todos", todosRouter);
 app.use("/user", userRouter);
