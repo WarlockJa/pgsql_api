@@ -39,7 +39,7 @@ const authGoogleUser = async (req, res) => {
     const userGoogleData = await verifyGoogleCredentials({
         access_token,
     });
-    const { sub, given_name, name, family_name, email, email_verified, locale } = userGoogleData;
+    const { given_name, name, family_name, email, email_verified, locale } = userGoogleData;
     // if no user data sending error
     if (!email)
         return res.status(500).json({ message: userGoogleData });
@@ -65,7 +65,7 @@ const authGoogleUser = async (req, res) => {
                 darkmode: darkmode,
                 authislocal: false,
                 hidecompleted: false,
-                widgets: null,
+                widgets: "",
             };
             // writing new user data into DB
             await pool.execute("INSERT INTO users (email, email_confirmed, name, surname, locale, password, refreshtoken, darkmode, authislocal) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?)", [

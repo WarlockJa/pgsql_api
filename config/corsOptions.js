@@ -1,4 +1,3 @@
-// Cross Origin Resource Sharing
 import allowedOrigin from "./allowedOrigin.js";
 // corsOptions from the documentation
 const corsOptions = {
