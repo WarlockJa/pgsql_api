@@ -2,6 +2,7 @@ import { OkPacket } from "mysql2";
 import { pool } from "../db/DBConnect.js";
 import compareTimestamps from "../util/compareTimestamps.js";
 import Joi from "joi";
+import bcrypt from "bcrypt";
 import getRandomPassword from "../util/getRandomPassword.js";
 import sendEmail from "../util/sendEmail.js";
 import getEmailBody from "../util/getEmailBody.js";
@@ -58,9 +59,10 @@ const resetPassword = async (req, res) => {
     await pool.execute("DELETE FROM verify WHERE email = ?", [email]);
 
     const randomPassword = getRandomPassword();
+    const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
     await pool.execute("UPDATE users SET password = ? WHERE email = ?", [
-      randomPassword,
+      hashedPassword,
       email,
     ]);
 
