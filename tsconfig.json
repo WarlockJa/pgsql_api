@@ -1,11 +1,11 @@
 {
-    "compilerOptions": {
-        "module": "NodeNext",
-        "moduleResolution": "nodenext",
-        "target": "ES2020",
-        "sourceMap": true,
-        "outDir": "temp/build",
-        "skipLibCheck": true
-    },
-    "include": ["src/**/*", "tests"]
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
+    "target": "ES2020",
+    "sourceMap": true,
+    "outDir": "/",
+    "skipLibCheck": true
+  },
+  "include": ["src/**/*", "tests"]
 }

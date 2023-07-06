@@ -41,12 +41,12 @@ const authUser = async (req, res) => {
     // generating jwt tokens
     const accessToken = jwt.sign(
       { email: foundUser.email },
-      process.env.ACCESS_TOKEN_SECRET,
+      process.env.ACCESS_TOKEN_SECRET!,
       { expiresIn: "600s" }
     );
     const refreshToken = jwt.sign(
       { email: foundUser.email },
-      process.env.REFRESH_TOKEN_SECRET,
+      process.env.REFRESH_TOKEN_SECRET!,
       { expiresIn: "30d" }
     );
 
@@ -105,19 +105,19 @@ const reauthUser = async (req, res) => {
   // verifying refresh token and reissuing both access and refresh tokens
   jwt.verify(
     cookies.dailyplanner,
-    process.env.REFRESH_TOKEN_SECRET,
+    process.env.REFRESH_TOKEN_SECRET!,
     async (err, result) => {
       if (err)
         return res.status(403).json({ message: err.message, status: 403 });
 
       const accessToken = jwt.sign(
         { email: foundUser.email },
-        process.env.ACCESS_TOKEN_SECRET,
+        process.env.ACCESS_TOKEN_SECRET!,
         { expiresIn: "600s" }
       );
       const refreshToken = jwt.sign(
         { email: foundUser.email },
-        process.env.REFRESH_TOKEN_SECRET,
+        process.env.REFRESH_TOKEN_SECRET!,
         { expiresIn: "30d" }
       );
 

@@ -1,7 +1,7 @@
 // import pg from 'pg';
 // const pool = new pg.Pool();
-import { config } from 'dotenv';
-import mysql from 'mysql2/promise';
+import { config } from "dotenv";
+import mysql from "mysql2/promise";
 config();
 
 export const pool = mysql.createPool({
@@ -10,15 +10,48 @@ export const pool = mysql.createPool({
   database: process.env.MSQL_DB,
   password: process.env.MSQL_PSWD,
   ssl: {
-    rejectUnauthorized: true
+    rejectUnauthorized: true,
   },
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
 });
 
-export const ACCEPTED_LOCALES = ['en', 'ru', 'ru-RU', 'en-US', 'en-GB', 'en-ZW', 'en-AU', 'en-BZ', 'en-CA', 'en-IE', 'en-JM', 'en-NZ', 'en-PH', 'en-ZA', 'en-TT', 'en-VI'];
-export type LiteralLocale = 'en' | 'ru' | 'ru-RU' | 'en-US' | 'en-GB' | 'en-ZW' | 'en-AU' | 'en-BZ' | 'en-CA' | 'en-IE' | 'en-JM' | 'en-NZ' | 'en-PH' | 'en-ZA' | 'en-TT' | 'en-VI';
+export const ACCEPTED_LOCALES = [
+  "en",
+  "ru",
+  "ru-RU",
+  "en-US",
+  "en-GB",
+  "en-ZW",
+  "en-AU",
+  "en-BZ",
+  "en-CA",
+  "en-IE",
+  "en-JM",
+  "en-NZ",
+  "en-PH",
+  "en-ZA",
+  "en-TT",
+  "en-VI",
+];
+export type LiteralLocale =
+  | "en"
+  | "ru"
+  | "ru-RU"
+  | "en-US"
+  | "en-GB"
+  | "en-ZW"
+  | "en-AU"
+  | "en-BZ"
+  | "en-CA"
+  | "en-IE"
+  | "en-JM"
+  | "en-NZ"
+  | "en-PH"
+  | "en-ZA"
+  | "en-TT"
+  | "en-VI";
 
 export interface IDBUserIdToken {
   name: string;
@@ -38,7 +71,7 @@ export interface IDBUserIdToken {
 export interface IFrontEndUserIdToken {
   name: string;
   surname: string;
-  picture: string;
+  picture: string | null;
   email: string;
   email_confirmed: boolean;
   locale: string;

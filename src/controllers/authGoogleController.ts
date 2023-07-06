@@ -26,7 +26,7 @@ async function verifyGoogleCredentials({ access_token }: IAuthGoogleUser) {
   try {
     // Get the JSON with all the user info from Google API
     const result = await fetch(
-      process.env.GOOGLE_API_URI.concat() + access_token
+      process.env.GOOGLE_API_URI!.concat() + access_token
     ).then((response) => response.json());
     // This is a JSON object that contains all the user info from Google account
     return result;
@@ -67,7 +67,7 @@ const authGoogleUser = async (req, res) => {
   const userGoogleData: AuthGoogleResponse = await verifyGoogleCredentials({
     access_token,
   });
-  const { sub, given_name, name, family_name, email, email_verified, locale } =
+  const { given_name, name, family_name, email, email_verified, locale } =
     userGoogleData;
 
   // if no user data sending error
@@ -83,12 +83,12 @@ const authGoogleUser = async (req, res) => {
     // generating tokens
     const accessToken = jwt.sign(
       { email: email },
-      process.env.ACCESS_TOKEN_SECRET,
+      process.env.ACCESS_TOKEN_SECRET!,
       { expiresIn: "600s" }
     );
     const refreshToken = jwt.sign(
       { email: email },
-      process.env.REFRESH_TOKEN_SECRET,
+      process.env.REFRESH_TOKEN_SECRET!,
       { expiresIn: "30d" }
     );
 
@@ -108,7 +108,7 @@ const authGoogleUser = async (req, res) => {
         darkmode: darkmode,
         authislocal: false,
         hidecompleted: false,
-        widgets: null,
+        widgets: "",
       };
       // writing new user data into DB
       await pool.execute(
