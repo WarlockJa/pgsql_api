@@ -17,15 +17,18 @@ import resetPassword from "./routes/resetPassword.js";
 config();
 const app = express();
 const PORT = process.env.PORT || 5000;
+
 // routes unaffected by cors
 app.get("/", (req, res) => res.send("API is running")); // echo testing route
 app.use("/verify", verifyEmailRouter); // route to accept email confirmation requests from a link in email
 app.use("/reset", resetPassword); // route to accept password reset requests from a link in email
+
 // middleware
 app.use(credentials);
 app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
+
 // routes
 // password operations
 // PUT: send an e-mail with a reset password link to the provided e-mail
@@ -56,5 +59,5 @@ app.use("/todos", todosRouter);
 // PUT: send an e-mail with a link to /verify route that confirms user e-mail
 // DELETE: delete user
 app.use("/user", userRouter);
+
 app.listen(PORT, () => console.log("Server is running on port ", PORT));
-//# sourceMappingURL=server.js.map
