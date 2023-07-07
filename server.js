@@ -26,7 +26,7 @@ app.set("view engine", "pug");
 // routes unaffected by cors
 app.get(
   "^/$|/index(.html)?",
-  (req, res) => res.redirect("index.html")
+  (req, res) => res.status(200)
   // res.render(path.join(__dirname, "views", "index"), {
   //   title: "Daily Planner API",
   // })
