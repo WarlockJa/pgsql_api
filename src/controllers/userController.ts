@@ -32,33 +32,6 @@ const logoutUser = async (req, res) => {
   }
 };
 
-// //GET get id token
-// const getUser = async (req, res) => {
-//     // getting email form access token
-//     const userEmail = req.userEmail;
-//     try {
-//         // finding user data
-//         const result = await pool.execute<OkPacket>('SELECT * FROM users WHERE email = ?', [userEmail]);
-//         if(Array.isArray(result[0]) && result[0].length === 0) return res.status(404).json({ message: 'user not found' });
-
-//         // forming idToken and sending result
-//         const foundUser = result[0][0];
-//         const idToken: IIdToken = {
-//             name: foundUser.name,
-//             surname: foundUser.surname,
-//             picture: foundUser.picture,
-//             email: foundUser.email,
-//             email_confirmed: foundUser.email_confirmed,
-//             locale: foundUser.locale,
-//             darkmode: foundUser.darkmode,
-//             authislocal: foundUser.authislocal
-//         };
-//         return res.status(200).json({ idToken });
-//     } catch (error) {
-//         return res.status(500).json({ message: 'Failed to access DB' });
-//     }
-// }
-
 // PUT request. User email confirmation
 const confirmUser = async (req, res) => {
   const userEmailFromAccessToken = req.userEmail;
@@ -98,12 +71,6 @@ const confirmUser = async (req, res) => {
     href: `${process.env.BASE_URI}/verify/${userEmailFromAccessToken}/${emailConfirmationToken}`,
     aText: "Click to Verify",
   });
-  // const htmlVerificationLink =
-  // `<body style="padding: 3em; border-radius: 8px; background: linear-gradient(35deg, lightblue, rgb(232, 255, 254)); color: #131313; font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;">
-  //     <h1>Daily Planner</h1>
-  //     <p style="max-width: 700px; font-size: 1.5rem;">You received this e-mail as a part of verification process for <span style="color: #252525; font-weight: bold;">Daily Planner</span> website. Follow the link to confirm your e-mail address and unlock additional features, such as reminder option for your tasks!</p>
-  //     <a style="color: #2626B6; font-size: 1.5rem;" onmouseleave="this.style.color='#2626B6'" onmouseover="this.style.color='#7626B6'" href='${process.env.BASE_URI}/verify/${userEmailFromAccessToken}/${emailConfirmationToken}' target='_blank'>Click to Verify</a>
-  // </body>`;
 
   const result = await sendEmail({
     // TODO switch to actual email
@@ -197,19 +164,16 @@ const updateUser = async (req, res) => {
   if (validFields["newpassword"]) {
     // checking if attempting to change password for externally authenticated user (Google authentication)
     if (foundUser.authislocal === 0)
-      return res
-        .status(401)
-        .json({
-          message:
-            "Not allowed to change password with external authentication",
-        });
+      return res.status(401).json({
+        message: "Not allowed to change password with external authentication",
+      });
     // checking if password is correct
     const match = await bcrypt.compare(
       validFields["oldpassword"],
       foundUser.password
     );
     if (!match)
-      return res.status(401).json({ message: "Old password is incorrect" });
+      return res.status(401).json({ message: "oldpassword_incorrect" });
     // adding password with the value of encrypted newpassword in the validFields and removing fields oldpassword and newpassword
     const hashedPassword = await bcrypt.hash(validFields["newpassword"], 10);
     validFields.password = hashedPassword;
