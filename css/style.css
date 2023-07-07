@@ -1,0 +1,18 @@
+body {
+  background: linear-gradient(25deg, #22b3cc, #059268);
+  box-sizing: border-box;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #232323;
+  margin: 0;
+}
+
+a {
+  color: #940d72;
+}
+a:hover {
+  color: #640202;
+}
