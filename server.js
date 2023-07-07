@@ -27,7 +27,7 @@ app.set("view engine", "pug");
 app.get(
   "^/$|/index(.html)?",
   (req, res) =>
-    res.redirect(path.join(process.cwd(), "static", "views", "index.html"))
+    res.redirect(path.join(__dirname, "static", "views", "index.html"))
   // res.render(path.join(__dirname, "views", "index"), {
   //   title: "Daily Planner API",
   // })
