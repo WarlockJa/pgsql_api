@@ -36,7 +36,7 @@ const resetPassword = async (req, res) => {
     // password should not be reset if user authenticated through external credentials (Google)
     if (foundUserAuthType.authislocal === 0)
       return res.status(401).json({
-        message: "Cannot reset password for this type of authentication",
+        message: "auth_incorrect",
       });
 
     // generating confrim token
