@@ -30,7 +30,10 @@ app.set("view engine", "pug");
 app.get(
   "^/$|/index(.html)?",
   (req, res) =>
-    res.sendFile("index.html", { root: path.join(__dirname, "public") })
+    // res.sendFile("index1.html", { root: path.join(__dirname, "public") })
+    res.render(path.join(__dirname, "public", "views", "index"), {
+      title: "Daily Planner API",
+    })
   // res.render("index", {
   //   title: "Daily Planner API",
   // })
