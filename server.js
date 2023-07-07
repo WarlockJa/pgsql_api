@@ -24,13 +24,14 @@ const __dirname = path.dirname(__filename);
 app.set("view engine", "pug");
 
 // routes unaffected by cors
-app.get(
-  "^/$|/index(.html)?",
-  (req, res) => res.status(200)
-  // res.render(path.join(__dirname, "views", "index"), {
-  //   title: "Daily Planner API",
-  // })
-); // echo testing route
+app.get("/", (req, res) => res.send("API is running"));
+// app.get(
+//   "^/$|/index(.html)?",
+//   (req, res) => res.status(200)
+//   // res.render(path.join(__dirname, "views", "index"), {
+//   //   title: "Daily Planner API",
+//   // })
+// ); // echo testing route
 app.use("/verify", verifyEmailRouter); // route to accept email confirmation requests from a link in email
 app.use("/reset", resetPassword); // route to accept password reset requests from a link in email
 // middleware
