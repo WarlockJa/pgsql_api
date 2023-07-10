@@ -53,11 +53,11 @@ const resetPassword = async (req, res) => {
       email,
     ]);
     // finding user's preferred language
-    const lang = getUserLanguage(
-      await pool
-        .execute("SELECT locale FROM users WHERE email = ?", [email])[0][0]
-        .slice(0, 2)
+    const usersLocale = await pool.execute(
+      "SELECT locale FROM users WHERE email = ?",
+      [email]
     );
+    const lang = getUserLanguage(usersLocale[0][0].locale.slice(0, 2));
 
     // displaying new password page on reset
     res.render("password", {
