@@ -22,7 +22,7 @@ const PORT = process.env.PORT || 5000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static("public"));
-// app.set("views", "./public/views");
+app.set("views", "./public/views");
 app.set("view engine", "pug");
 
 // routes unaffected by cors

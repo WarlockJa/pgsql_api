@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import bcrypt from "bcrypt";
 import getRandomPassword from "../util/getRandomPassword.js";
+import getUserLanguage from "../util/getUserLanguage.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -51,29 +52,16 @@ const resetPassword = async (req, res) => {
       hashedPassword,
       email,
     ]);
-    // // creating html verification link to send user as email body
-    // const htmlPasswordResetLink = getEmailBody({
-    //   h1: "Daily Planner",
-    //   bodyText: `Your password for Daily Planner website has been reset. New password is: ${randomPassword}`,
-    //   href: `${process.env.ALLOWED_ORIGIN_PROD}`,
-    //   aText: "to Daily Planner",
-    // });
-    // // sending email
-    // const emailResult = await sendEmail({
-    //   // TODO switch to actual email
-    //   to: "warlockja@gmail.com",
-    //   // to: email,
-    //   subject: "Daily Planner password reset",
-    //   html: htmlPasswordResetLink,
-    // });
-    // const message =
-    //   emailResult.accepted?.length === 1
-    //     ? "An email was sent to your account"
-    //     : "There was an error sending email";
-    // return res.status(200).json({ message: message });
-    // redirecting user to the website on successful email verification
+    // finding user's preferred language
+    const lang = getUserLanguage(
+      await pool
+        .execute("SELECT locale FROM users WHERE email = ?", [email])[0][0]
+        .slice(0, 2)
+    );
+
+    // displaying new password page on reset
     res.render("password", {
-      root: path.join(__dirname, "public"),
+      root: path.join(__dirname, "public", lang),
       password: randomPassword,
       email,
       dplink: process.env.ALLOWED_ORIGIN_PROD,
