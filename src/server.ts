@@ -1,6 +1,8 @@
 import { config } from "dotenv";
 import express from "express";
 import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 import corsOptions from "./config/corsOptions.js";
 import cookieParser from "cookie-parser";
 import credentials from "./middleware/credentials.js";
@@ -17,11 +19,16 @@ import resetPassword from "./routes/resetPassword.js";
 config();
 const app = express();
 const PORT = process.env.PORT || 5000;
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 app.set("view engine", "pug");
 
 // routes unaffected by cors
 app.get("^/$|/index(.html)?", (req, res) =>
-  res.render("index", { title: "Daily Planner API" })
+  res.render("index.pug", {
+    root: path.join(__dirname, "public"),
+    title: "Daily Planner API",
+  })
 ); // echo testing route
 app.use("/verify", verifyEmailRouter); // route to accept email confirmation requests from a link in email
 app.use("/reset", resetPassword); // route to accept password reset requests from a link in email

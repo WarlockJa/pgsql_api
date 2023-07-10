@@ -27,20 +27,11 @@ app.set("view engine", "pug");
 
 // routes unaffected by cors
 // app.get("/", (req, res) => res.send("API is running"));
-app.get(
-  "^/$|/index(.html)?",
-  (req, res) =>
-    // res.sendFile("index.html", { root: path.join(__dirname, "public") })
-    res.render("index.pug", {
-      root: path.join(__dirname, "public"),
-      title: "Daily Planner API",
-    })
-  // res.render(path.join(__dirname, "public", "views", "index"), {
-  //   title: "Daily Planner API",
-  // })
-  // res.render("index", {
-  //   title: "Daily Planner API",
-  // })
+app.get("^/$|/index(.html)?", (req, res) =>
+  res.render("index.pug", {
+    root: path.join(__dirname, "public"),
+    title: "Daily Planner API",
+  })
 ); // echo testing route
 app.use("/verify", verifyEmailRouter); // route to accept email confirmation requests from a link in email
 app.use("/reset", resetPassword); // route to accept password reset requests from a link in email
