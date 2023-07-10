@@ -31,6 +31,7 @@ app.get("^/$|/index(.html)?", (req, res) =>
   res.render("index.pug", {
     root: path.join(__dirname, "public"),
     title: "Daily Planner API",
+    dplink: process.env.ALLOWED_ORIGIN_PROD,
   })
 ); // echo testing route
 app.use("/verify", verifyEmailRouter); // route to accept email confirmation requests from a link in email

@@ -1,12 +1,19 @@
 import { pool } from "../db/DBConnect.js";
 import compareTimestamps from "../util/compareTimestamps.js";
 import Joi from "joi";
+import path from "path";
+import { fileURLToPath } from "url";
 import bcrypt from "bcrypt";
 import getRandomPassword from "../util/getRandomPassword.js";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const schemaResetPassword = Joi.object({
   email: Joi.string().email().required(),
   token: Joi.string().required(),
 });
+
 const resetPassword = async (req, res) => {
   // Joi validation
   const validationResult = await schemaResetPassword.validate(req.params);
@@ -65,7 +72,12 @@ const resetPassword = async (req, res) => {
     //     : "There was an error sending email";
     // return res.status(200).json({ message: message });
     // redirecting user to the website on successful email verification
-    res.render("password", { password: randomPassword, email });
+    res.render("password", {
+      root: path.join(__dirname, "public"),
+      password: randomPassword,
+      email,
+      dplink: process.env.ALLOWED_ORIGIN_PROD,
+    });
     // return res.redirect(process.env.ALLOWED_ORIGIN_PROD);
   } catch (error) {
     return res.status(500).json({ message: error.stack });
