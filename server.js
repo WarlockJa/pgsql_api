@@ -22,14 +22,14 @@ const PORT = process.env.PORT || 5000;
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 app.use(express.static("public"));
-app.set("views", "./public/views");
+// app.set("views", "./public/views");
 app.set("view engine", "pug");
 
 // routes unaffected by cors
 // app.get("/", (req, res) => res.send("API is running"));
 app.get("^/$|/index(.html)?", (req, res) =>
   res.render("index.pug", {
-    root: path.join(__dirname, "public"),
+    root: path.join(__dirname, "public", "views"),
     title: "Daily Planner API",
     dplink: process.env.ALLOWED_ORIGIN_PROD,
   })
