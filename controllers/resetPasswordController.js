@@ -60,8 +60,8 @@ const resetPassword = async (req, res) => {
     const lang = getUserLanguage(usersLocale[0][0].locale.slice(0, 2));
 
     // displaying new password page on reset
-    res.render("password", {
-      root: path.join(__dirname, "public", lang),
+    res.render(`password_${lang}`, {
+      root: path.join(__dirname, "public"),
       password: randomPassword,
       email,
       dplink: process.env.ALLOWED_ORIGIN_PROD,
