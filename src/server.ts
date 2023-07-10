@@ -31,8 +31,8 @@ app.get("^/$|/index(.html)?", (req, res) => {
     dplink: process.env.ALLOWED_ORIGIN_PROD,
   });
 }); // echo testing route
-app.use("/verify", verifyEmailRouter); // route to accept email confirmation requests from a link in email
-app.use("/reset", resetPassword); // route to accept password reset requests from a link in email
+app.use("/v1/verify", verifyEmailRouter); // route to accept email confirmation requests from a link in email
+app.use("/v1/reset", resetPassword); // route to accept password reset requests from a link in email
 
 // middleware
 app.use(credentials);
@@ -43,32 +43,32 @@ app.use(cookieParser());
 // routes
 // password operations
 // PUT: send an e-mail with a reset password link to the provided e-mail
-app.use("/password", passwordRouter);
+app.use("/v1/password", passwordRouter);
 // register a new user
 // POST: register a new user
-app.use("/register", registerRouter);
+app.use("/v1/register", registerRouter);
 // authentication route
 // GET: reauthenticate user using client-side stored httpOnly cookie data
 // POST: authenticate user using e-mail/password pair
-app.use("/auth", authRouter);
+app.use("/v1/auth", authRouter);
 // external authentication
 // POST: authorize/authenticate user using external source (Google)
-app.use("/authgoogle", authGoogleRouter);
+app.use("/v1/authgoogle", authGoogleRouter);
 // access token refresh route
 // GET: refresh access token using refresh token stored in httpOnly cookie
-app.use("/refresh", refreshRouter);
+app.use("/v1/refresh", refreshRouter);
 app.use(verifyJWT);
 // todos routes
 // GET: read DB for the list of todos
 // POST: add a new todo to the DB
 // PUT: update a todo
 // DELETE: delete a todo
-app.use("/todos", todosRouter);
+app.use("/v1/todos", todosRouter);
 // user routes
 // GET: logout user (remove refresh token from the DB)
 // POST: update user data
 // PUT: send an e-mail with a link to /verify route that confirms user e-mail
 // DELETE: delete user
-app.use("/user", userRouter);
+app.use("/v1/user", userRouter);
 
 app.listen(PORT, () => console.log("Server is running on port ", PORT));

@@ -74,8 +74,8 @@ const confirmUser = async (req, res) => {
 
   const result = await sendEmail({
     // TODO switch to actual email
-    to: "warlockja@gmail.com",
-    // to: userEmailFromAccessToken,
+    // to: "warlockja@gmail.com",
+    to: userEmailFromAccessToken,
     subject: "Daily Planner Email verification",
     html: htmlVerificationLink,
   });

@@ -65,8 +65,8 @@ const resetPassword = async (req, res) => {
     // sending email
     const emailResult = await sendEmail({
       // TODO switch to actual email
-      to: "warlockja@gmail.com",
-      // to: email,
+      // to: "warlockja@gmail.com",
+      to: email,
       subject: "Daily Planner password reset",
       html: htmlPasswordResetLink,
     });
