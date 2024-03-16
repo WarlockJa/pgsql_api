@@ -10,9 +10,9 @@ export const pool = mysql.createPool({
   database: process.env.MSQL_DB,
   password: process.env.MSQL_PSWD,
   port: process.env.MSQL_PORT,
-  ssl: {
-    rejectUnauthorized: true,
-  },
+  //   ssl: {
+  //     rejectUnauthorized: true,
+  //   },
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
