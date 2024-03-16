@@ -1,0 +1,20 @@
+    // dump data from Planetscale
+pscale database dump wj_planetscale_testdb main
+
+    // combine schemas
+cat *-schema.sql > all_schema.sql
+
+    // combine data
+cat *.00001.sql > all_data.sql
+
+    // creating tables on Railway
+-- find variable in Railway Dashboard => Click <Your DB> => Menu Variables
+mysql -h <MYSQL_HOST> -P <MYSQL_PORT> -u <MYSQLUSER> --database <MYSQLDATABASE> -p < all_schema.sql
+-- when prompted for passwod enter <MSQL_PSWD>
+-- check created tables in Railway Dashboard => Click <Your DB> => Menu Data
+
+    // adding data to Railway
+-- find variable in Railway Dashboard => Click <Your DB> => Menu Variables
+mysql -h <MYSQL_HOST> -P <MYSQL_PORT> -u <MYSQLUSER> --database <MYSQLDATABASE> -p < all_data.sql
+-- when prompted for passwod enter <MSQL_PSWD>
+-- check created tables in Railway Dashboard => Click <Your DB> => Menu Data
