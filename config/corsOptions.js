@@ -3,13 +3,15 @@ import allowedOrigin from "./allowedOrigin.js";
 const corsOptions = {
   origin: (origin, callback) => {
     // TEST
-    callback(null, origin);
-    // if (allowedOrigin.indexOf(origin) !== -1) {
-    //   // !origin for localhost testing
-    //   callback(null, origin);
-    // } else {
-    //   callback(new Error("Not allowed by CORS"));
-    // }
+    // callback(null, origin);
+    if (allowedOrigin.indexOf(origin) !== -1) {
+      console.log("PASSED: ", allowedOrigin);
+      // !origin for localhost testing
+      callback(null, origin);
+    } else {
+      console.log("FAILED: ", allowedOrigin);
+      callback(new Error("Not allowed by CORS"));
+    }
   },
   optionsSuccessStatus: 200,
 };
